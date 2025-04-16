@@ -1,0 +1,23 @@
+package dev.elieweb.timeaway.leave.controller;
+
+import dev.elieweb.timeaway.leave.enums.LeaveType;
+import dev.elieweb.timeaway.leave.service.LeaveBalanceService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/leave-balances")
+@RequiredArgsConstructor
+public class LeaveBalanceController {
+    private final LeaveBalanceService leaveBalanceService;
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<LeaveType, Integer>> getCurrentUserBalances() {
+        return ResponseEntity.ok(leaveBalanceService.getCurrentBalances(leaveBalanceService.getCurrentUser()));
+    }
+} 
