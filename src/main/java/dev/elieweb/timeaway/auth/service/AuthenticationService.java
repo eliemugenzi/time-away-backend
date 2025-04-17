@@ -10,6 +10,7 @@ import dev.elieweb.timeaway.auth.enums.UserRole;
 import dev.elieweb.timeaway.auth.repository.UserRepository;
 import dev.elieweb.timeaway.common.exception.TokenRefreshException;
 import dev.elieweb.timeaway.auth.security.JwtService;
+import dev.elieweb.timeaway.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,10 +28,10 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
 
-    public AuthenticationResponse register(@Valid RegisterRequest request) {
+    public ApiResponse register(@Valid RegisterRequest request) {
         // Check if email already exists
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
         }
 
         // Set default role if not provided
@@ -53,13 +54,15 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return AuthenticationResponse.builder()
+        var response = AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken.getToken())
                 .build();
+
+        return ApiResponse.success(response);
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+    public ApiResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -68,28 +71,32 @@ public class AuthenticationService {
         );
 
         var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return AuthenticationResponse.builder()
+        var response = AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken.getToken())
                 .build();
+
+        return ApiResponse.success(response);
     }
 
-    public AuthenticationResponse refreshToken(TokenRefreshRequest request) {
+    public ApiResponse refreshToken(TokenRefreshRequest request) {
         return refreshTokenService.findByToken(request.getRefreshToken())
                 .map(refreshToken -> {
                     refreshTokenService.verifyExpiration(refreshToken);
                     var user = refreshToken.getUser();
                     var jwtToken = jwtService.generateToken(user);
 
-                    return AuthenticationResponse.builder()
+                    var response = AuthenticationResponse.builder()
                             .accessToken(jwtToken)
                             .refreshToken(refreshToken.getToken())
                             .build();
+
+                    return ApiResponse.success(response);
                 })
                 .orElseThrow(() -> new TokenRefreshException(request.getRefreshToken(), "Refresh token not found"));
     }

@@ -5,6 +5,7 @@ import dev.elieweb.timeaway.auth.dto.AuthenticationResponse;
 import dev.elieweb.timeaway.auth.dto.RegisterRequest;
 import dev.elieweb.timeaway.auth.dto.TokenRefreshRequest;
 import dev.elieweb.timeaway.auth.service.AuthenticationService;
+import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.common.exception.TokenRefreshException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,21 +20,21 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(
+    public ResponseEntity<ApiResponse> register(
             @Valid @RequestBody RegisterRequest request
     ) {
         return ResponseEntity.ok(authenticationService.register(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> authenticate(
+    public ResponseEntity<ApiResponse> authenticate(
             @Valid @RequestBody AuthenticationRequest request
     ) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<AuthenticationResponse> refreshToken(
+    public ResponseEntity<ApiResponse> refreshToken(
             @Valid @RequestBody TokenRefreshRequest request
     ) {
         return ResponseEntity.ok(authenticationService.refreshToken(request));
@@ -41,17 +42,17 @@ public class AuthController {
 
     @ExceptionHandler(value = TokenRefreshException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ResponseEntity<String> handleTokenRefreshException(TokenRefreshException ex) {
+    public ResponseEntity<ApiResponse> handleTokenRefreshException(TokenRefreshException ex) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(ex.getMessage());
+                .body(ApiResponse.error(ex.getMessage(), HttpStatus.FORBIDDEN.value()));
     }
 
     @ExceptionHandler(value = RuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+    public ResponseEntity<ApiResponse> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+                .body(ApiResponse.error(ex.getMessage(), HttpStatus.BAD_REQUEST.value()));
     }
 } 

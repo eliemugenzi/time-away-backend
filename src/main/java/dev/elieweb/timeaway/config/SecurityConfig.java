@@ -1,5 +1,7 @@
 package dev.elieweb.timeaway.config;
 
+import dev.elieweb.timeaway.auth.security.CustomAccessDeniedHandler;
+import dev.elieweb.timeaway.auth.security.CustomAuthenticationEntryPoint;
 import dev.elieweb.timeaway.auth.security.JwtAuthenticationFilter;
 import dev.elieweb.timeaway.auth.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,9 +44,20 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         // Swagger UI and API docs
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                        .requestMatchers(
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/v3/api-docs/**",
+                            "/api-docs/**",
+                            "/swagger-resources/**",
+                            "/webjars/**"
+                        ).permitAll()
                         // API endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/leave-requests/**").authenticated()
