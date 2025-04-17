@@ -1,5 +1,6 @@
 package dev.elieweb.timeaway.leave.controller;
 
+import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.leave.dto.DepartmentStatistics;
 import dev.elieweb.timeaway.leave.dto.LeaveStatistics;
 import dev.elieweb.timeaway.leave.service.LeaveStatisticsService;
@@ -20,12 +21,18 @@ public class LeaveStatisticsController {
     private final LeaveStatisticsService leaveStatisticsService;
 
     @GetMapping("/overall")
-    public ResponseEntity<LeaveStatistics> getOverallStatistics() {
-        return ResponseEntity.ok(leaveStatisticsService.getOverallStatistics());
+    public ResponseEntity<ApiResponse> getOverallStatistics() {
+        try {
+            LeaveStatistics statistics = leaveStatisticsService.getOverallStatistics();
+            return ResponseEntity.ok(ApiResponse.success("Overall leave statistics retrieved successfully", statistics));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to retrieve overall leave statistics"));
+        }
     }
 
     @GetMapping("/departments")
-    public ResponseEntity<List<DepartmentStatistics>> getDepartmentStatistics() {
-        return ResponseEntity.ok(leaveStatisticsService.getDepartmentStatistics());
+    public ResponseEntity<ApiResponse> getDepartmentStatistics() {
+        List<DepartmentStatistics> statistics = leaveStatisticsService.getDepartmentStatistics();
+        return ResponseEntity.ok(ApiResponse.success("Department leave statistics retrieved successfully", statistics));
     }
 } 

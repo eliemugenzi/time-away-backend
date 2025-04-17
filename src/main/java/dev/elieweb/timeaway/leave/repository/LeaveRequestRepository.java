@@ -22,8 +22,8 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     int countEmployeesOnLeave(String department, LocalDate date);
 
     @Query("SELECT AVG(TIMESTAMPDIFF(DAY, l.startDate, l.endDate)) FROM LeaveRequest l WHERE l.status = 'APPROVED'")
-    double calculateAverageLeaveDuration();
+    Double calculateAverageLeaveDuration();
 
     @Query("SELECT AVG(TIMESTAMPDIFF(DAY, l.startDate, l.endDate)) FROM LeaveRequest l WHERE l.user.department = ?1 AND l.status = 'APPROVED'")
-    double calculateAverageLeaveDurationForDepartment(String department);
+    Double calculateAverageLeaveDurationForDepartment(String department);
 } 

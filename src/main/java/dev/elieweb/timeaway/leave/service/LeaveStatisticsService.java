@@ -53,10 +53,12 @@ public class LeaveStatisticsService {
     }
 
     private double calculateAverageLeaveDuration() {
-        return leaveRequestRepository.calculateAverageLeaveDuration();
+        Double average = leaveRequestRepository.calculateAverageLeaveDuration();
+        return average != null ? average : 0.0;
     }
 
     private double calculateAverageLeaveDurationForDepartment(String department) {
-        return leaveRequestRepository.calculateAverageLeaveDurationForDepartment(department);
+        Double average = leaveRequestRepository.calculateAverageLeaveDurationForDepartment(department);
+        return average != null ? average : 0.0;
     }
 } 

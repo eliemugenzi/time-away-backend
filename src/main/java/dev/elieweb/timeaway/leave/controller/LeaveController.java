@@ -1,5 +1,6 @@
 package dev.elieweb.timeaway.leave.controller;
 
+import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
@@ -19,39 +20,44 @@ public class LeaveController {
     private final LeaveRequestService leaveRequestService;
 
     @PostMapping
-    public ResponseEntity<LeaveRequestResponseDTO> createLeaveRequest(
+    public ResponseEntity<ApiResponse> createLeaveRequest(
             @Valid @RequestBody LeaveRequestDTO request
     ) {
-        return ResponseEntity.ok(leaveRequestService.createLeaveRequest(request));
+        LeaveRequestResponseDTO response = leaveRequestService.createLeaveRequest(request);
+        return ResponseEntity.ok(ApiResponse.success("Leave request created successfully", response));
     }
 
     @GetMapping
-    public ResponseEntity<List<LeaveRequestResponseDTO>> getAllLeaveRequests() {
-        return ResponseEntity.ok(leaveRequestService.getAllLeaveRequests());
+    public ResponseEntity<ApiResponse> getAllLeaveRequests() {
+        List<LeaveRequestResponseDTO> requests = leaveRequestService.getAllLeaveRequests();
+        return ResponseEntity.ok(ApiResponse.success("Leave requests retrieved successfully", requests));
     }
 
     @GetMapping("/my-requests")
-    public ResponseEntity<List<LeaveRequestResponseDTO>> getMyLeaveRequests() {
-        return ResponseEntity.ok(leaveRequestService.getCurrentUserLeaveRequests());
+    public ResponseEntity<ApiResponse> getMyLeaveRequests() {
+        List<LeaveRequestResponseDTO> requests = leaveRequestService.getCurrentUserLeaveRequests();
+        return ResponseEntity.ok(ApiResponse.success("Your leave requests retrieved successfully", requests));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LeaveRequestResponseDTO> getLeaveRequest(@PathVariable Long id) {
-        return ResponseEntity.ok(leaveRequestService.getLeaveRequest(id));
+    public ResponseEntity<ApiResponse> getLeaveRequest(@PathVariable Long id) {
+        LeaveRequestResponseDTO request = leaveRequestService.getLeaveRequest(id);
+        return ResponseEntity.ok(ApiResponse.success("Leave request retrieved successfully", request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<LeaveRequestResponseDTO> updateLeaveRequest(
+    public ResponseEntity<ApiResponse> updateLeaveRequest(
             @PathVariable Long id,
             @Valid @RequestBody LeaveRequestUpdateDTO request
     ) {
-        return ResponseEntity.ok(leaveRequestService.updateLeaveRequestStatus(id, request));
+        LeaveRequestResponseDTO response = leaveRequestService.updateLeaveRequestStatus(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Leave request updated successfully", response));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLeaveRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deleteLeaveRequest(@PathVariable Long id) {
         leaveRequestService.deleteLeaveRequest(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("Leave request deleted successfully", null));
     }
 } 
