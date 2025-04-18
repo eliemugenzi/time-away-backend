@@ -10,11 +10,13 @@ import dev.elieweb.timeaway.leave.entity.LeaveRequest;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
 import dev.elieweb.timeaway.leave.repository.LeaveRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,9 +51,9 @@ public class LeaveRequestService {
         List<LeaveRequest> requests;
 
         if (currentUser.getRole() == UserRole.ROLE_ADMIN || currentUser.getRole() == UserRole.ROLE_MANAGER) {
-            requests = leaveRequestRepository.findAll();
+            requests = leaveRequestRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
         } else {
-            requests = leaveRequestRepository.findByUser(currentUser);
+            requests = leaveRequestRepository.findByUserOrderByCreatedAtDesc(currentUser);
         }
 
         return requests.stream()
@@ -61,7 +63,7 @@ public class LeaveRequestService {
 
     public List<LeaveRequestResponseDTO> getCurrentUserLeaveRequests() {
         User currentUser = getCurrentUser();
-        return leaveRequestRepository.findByUser(currentUser).stream()
+        return leaveRequestRepository.findByUserOrderByCreatedAtDesc(currentUser).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -71,12 +73,12 @@ public class LeaveRequestService {
         if (currentUser.getRole() != UserRole.ROLE_ADMIN && currentUser.getRole() != UserRole.ROLE_MANAGER) {
             throw new RuntimeException("You don't have permission to view pending leave requests");
         }
-        return leaveRequestRepository.findByStatus(LeaveStatus.PENDING).stream()
+        return leaveRequestRepository.findByStatusOrderByCreatedAtDesc(LeaveStatus.PENDING).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    public LeaveRequestResponseDTO getLeaveRequest(Long id) {
+    public LeaveRequestResponseDTO getLeaveRequest(UUID id) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
 
@@ -89,7 +91,7 @@ public class LeaveRequestService {
     }
 
     @Transactional
-    public LeaveRequestResponseDTO updateLeaveRequestStatus(Long id, LeaveRequestUpdateDTO request) {
+    public LeaveRequestResponseDTO updateLeaveRequestStatus(UUID id, LeaveRequestUpdateDTO request) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
 
@@ -114,7 +116,7 @@ public class LeaveRequestService {
     }
 
     @Transactional
-    public void deleteLeaveRequest(Long id) {
+    public void deleteLeaveRequest(UUID id) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
 
@@ -157,6 +159,8 @@ public class LeaveRequestService {
                 .reason(leaveRequest.getReason())
                 .status(leaveRequest.getStatus())
                 .rejectionReason(leaveRequest.getRejectionReason())
+                .createdAt(leaveRequest.getCreatedAt())
+                .updatedAt(leaveRequest.getUpdatedAt())
                 .build();
     }
 } 

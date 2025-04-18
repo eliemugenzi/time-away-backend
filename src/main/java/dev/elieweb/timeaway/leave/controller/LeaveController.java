@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/leaves")
@@ -40,7 +41,7 @@ public class LeaveController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getLeaveRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> getLeaveRequest(@PathVariable UUID id) {
         LeaveRequestResponseDTO request = leaveRequestService.getLeaveRequest(id);
         return ResponseEntity.ok(ApiResponse.success("Leave request retrieved successfully", request));
     }
@@ -48,7 +49,7 @@ public class LeaveController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ApiResponse> updateLeaveRequest(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody LeaveRequestUpdateDTO request
     ) {
         LeaveRequestResponseDTO response = leaveRequestService.updateLeaveRequestStatus(id, request);
@@ -56,7 +57,7 @@ public class LeaveController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> deleteLeaveRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deleteLeaveRequest(@PathVariable UUID id) {
         leaveRequestService.deleteLeaveRequest(id);
         return ResponseEntity.ok(ApiResponse.success("Leave request deleted successfully", null));
     }

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/leave-requests")
@@ -32,13 +33,13 @@ public class LeaveRequestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getLeaveRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> getLeaveRequest(@PathVariable UUID id) {
         LeaveRequestResponseDTO request = leaveRequestService.getLeaveRequest(id);
         return ResponseEntity.ok(ApiResponse.success("Leave request retrieved successfully", request));
     }
 
     @PutMapping("/{id}/approve")
-    public ResponseEntity<ApiResponse> approveLeaveRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> approveLeaveRequest(@PathVariable UUID id) {
         LeaveRequestUpdateDTO updateDTO = new LeaveRequestUpdateDTO();
         updateDTO.setStatus(LeaveStatus.APPROVED);
         LeaveRequestResponseDTO response = leaveRequestService.updateLeaveRequestStatus(id, updateDTO);
@@ -46,7 +47,7 @@ public class LeaveRequestController {
     }
 
     @PutMapping("/{id}/reject")
-    public ResponseEntity<ApiResponse> rejectLeaveRequest(@PathVariable Long id, @RequestBody(required = false) String rejectionReason) {
+    public ResponseEntity<ApiResponse> rejectLeaveRequest(@PathVariable UUID id, @RequestBody(required = false) String rejectionReason) {
         LeaveRequestUpdateDTO updateDTO = new LeaveRequestUpdateDTO();
         updateDTO.setStatus(LeaveStatus.REJECTED);
         updateDTO.setRejectionReason(rejectionReason);
@@ -62,7 +63,7 @@ public class LeaveRequestController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse> updateLeaveRequestStatus(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody LeaveRequestUpdateDTO request
     ) {
         LeaveRequestResponseDTO response = leaveRequestService.updateLeaveRequestStatus(id, request);

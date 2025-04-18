@@ -23,6 +23,10 @@ public class RefreshTokenService {
     @Value("${app.jwt.refresh-token.expiration}")
     private Long refreshTokenDurationMs;
 
+    public Optional<RefreshToken> findByToken(String token) {
+        return refreshTokenRepository.findByToken(token);
+    }
+
     public RefreshToken createRefreshToken(User user) {
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
@@ -33,23 +37,19 @@ public class RefreshTokenService {
         return refreshTokenRepository.save(refreshToken);
     }
 
-    public Optional<RefreshToken> findByToken(String token) {
-        return refreshTokenRepository.findByToken(token);
-    }
-
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             refreshTokenRepository.delete(token);
-            throw new TokenRefreshException(token.getToken(), "Refresh token was expired. Please make a new sign in request");
+            throw new TokenRefreshException(token.getToken(), "Refresh token was expired. Please make a new signin request");
         }
 
         return token;
     }
 
     @Transactional
-    public int deleteByUserId(Long userId) {
+    public int deleteByUserId(UUID userId) {
         return userRepository.findById(userId)
-                .map(refreshTokenRepository::deleteByUser)
+                .map(user -> refreshTokenRepository.deleteByUser(user))
                 .orElse(0);
     }
 } 

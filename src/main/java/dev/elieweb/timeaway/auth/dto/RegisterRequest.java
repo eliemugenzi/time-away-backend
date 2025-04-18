@@ -3,11 +3,14 @@ package dev.elieweb.timeaway.auth.dto;
 import dev.elieweb.timeaway.auth.enums.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Data
 @Builder
@@ -28,9 +31,9 @@ public class RegisterRequest {
     @Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 
-    @NotBlank(message = "Department is required")
-    private String department;
+    @NotNull(message = "Department ID is required")
+    private UUID departmentId;
 
     @Builder.Default
     private UserRole role = UserRole.ROLE_USER;
-} 
+}

@@ -7,6 +7,7 @@ import dev.elieweb.timeaway.leave.entity.LeaveRequest;
 import dev.elieweb.timeaway.leave.enums.LeaveType;
 import dev.elieweb.timeaway.leave.repository.LeaveBalanceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -76,7 +77,7 @@ public class LeaveBalanceService {
 
     public Map<LeaveType, Integer> getCurrentBalances(User user) {
         int currentYear = LocalDate.now().getYear();
-        List<LeaveBalance> balances = leaveBalanceRepository.findByUserAndYear(user, currentYear);
+        List<LeaveBalance> balances = leaveBalanceRepository.findByUserAndYearOrderByCreatedAtDesc(user, currentYear);
         
         return balances.stream()
                 .collect(Collectors.toMap(
@@ -89,7 +90,7 @@ public class LeaveBalanceService {
     @Transactional
     public void resetAnnualLeaveBalances() {
         int newYear = LocalDate.now().getYear();
-        List<User> allUsers = userRepository.findAll();
+        List<User> allUsers = userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
         
         for (User user : allUsers) {
             for (LeaveType leaveType : LeaveType.values()) {
