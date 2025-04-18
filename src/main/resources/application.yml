@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: timeaway
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    baseline-version: 0
+    clean-on-validation-error: true
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+  packages-to-scan: dev.elieweb.timeaway
+
+jwt:
+  expiration: 3600000 # 1 hour
+app:
+  jwt:
+    refresh-token:
+      expiration: 86400000 # 24 hours
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key-here}
+  from-email: ${SENDGRID_FROM_EMAIL:noreply@timeaway.com}
+  from-name: ${SENDGRID_FROM_NAME:TimeAway} 

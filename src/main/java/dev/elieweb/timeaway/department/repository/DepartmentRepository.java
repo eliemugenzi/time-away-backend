@@ -15,4 +15,5 @@ public interface DepartmentRepository extends JpaRepository<Department, UUID> {
     List<Department> findByDeletedFalse();
     List<Department> findByDeletedFalseOrderByCreatedAtDesc();
     boolean existsByName(String name);
+    Optional<Department> findByIdAndDeletedFalse(UUID id);
 } 

@@ -3,6 +3,7 @@ package dev.elieweb.timeaway.auth.entity;
 import dev.elieweb.timeaway.auth.enums.UserRole;
 import dev.elieweb.timeaway.common.entity.BaseEntity;
 import dev.elieweb.timeaway.department.entity.Department;
+import dev.elieweb.timeaway.job.entity.JobTitle;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -36,6 +37,10 @@ public class User extends BaseEntity implements UserDetails {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_title_id")
+    private JobTitle jobTitle;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
