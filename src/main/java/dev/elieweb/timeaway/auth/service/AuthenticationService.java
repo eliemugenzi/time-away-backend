@@ -19,9 +19,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+    private static final Set<String> HR_DEPARTMENT_NAMES = Set.of(
+            "human resources",
+            "hr",
+            "human resource",
+            "hr department",
+            "human resources department"
+    );
+
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final JobTitleRepository jobTitleRepository;
@@ -44,7 +55,8 @@ public class AuthenticationService {
         // Determine the role based on department
         UserRole role = request.getRole();
         if (role == null) {
-            role = "Human Resources".equals(department.getName()) ? 
+            String departmentNameLower = department.getName().toLowerCase().trim();
+            role = HR_DEPARTMENT_NAMES.contains(departmentNameLower) ? 
                    UserRole.ROLE_HR : UserRole.ROLE_USER;
         }
 
@@ -57,6 +69,7 @@ public class AuthenticationService {
                 .jobTitle(jobTitleRepository.findById(request.getJobTitleId())
                         .orElseThrow(() -> new ResourceNotFoundException("Job title not found")))
                 .role(role)
+                .joiningDate(LocalDateTime.now())
                 .build();
 
         User savedUser = userRepository.save(user);

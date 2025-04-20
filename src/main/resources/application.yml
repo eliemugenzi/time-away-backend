@@ -6,6 +6,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
     hibernate:
       ddl-auto: validate
   flyway:
@@ -15,6 +17,7 @@ spring:
     validate-on-migrate: true
     baseline-version: 0
     clean-on-validation-error: true
+    clean-disabled: false
 
 server:
   port: 8080

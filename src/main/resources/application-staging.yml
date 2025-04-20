@@ -8,6 +8,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          time_zone: UTC
+  flyway:
+    clean-disabled: false
+    clean-on-validation-error: true
   mail:
     host: smtp.gmail.com
     port: 587
