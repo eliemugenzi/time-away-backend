@@ -3,6 +3,7 @@ package dev.elieweb.timeaway.auth.enums;
 public enum UserRole {
     ROLE_ADMIN,
     ROLE_MANAGER,
+    ROLE_HR,
     ROLE_USER;
 
     public String getRole() {

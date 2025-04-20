@@ -10,6 +10,7 @@ import dev.elieweb.timeaway.auth.security.JwtService;
 import dev.elieweb.timeaway.common.exception.ResourceNotFoundException;
 import dev.elieweb.timeaway.common.exception.TokenRefreshException;
 import dev.elieweb.timeaway.department.repository.DepartmentRepository;
+import dev.elieweb.timeaway.job.repository.JobTitleRepository;
 import dev.elieweb.timeaway.leave.service.LeaveBalanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final JobTitleRepository jobTitleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -35,15 +37,29 @@ public class AuthenticationService {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        var user = User.builder()
+        // Get the department
+        var department = departmentRepository.findById(request.getDepartmentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+
+        // Determine the role based on department
+        UserRole role = request.getRole();
+        if (role == null) {
+            role = "Human Resources".equals(department.getName()) ? 
+                   UserRole.ROLE_HR : UserRole.ROLE_USER;
+        }
+
+        User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : UserRole.ROLE_USER)
+                .department(department)
+                .jobTitle(jobTitleRepository.findById(request.getJobTitleId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Job title not found")))
+                .role(role)
                 .build();
 
-        var savedUser = userRepository.save(user);
+        User savedUser = userRepository.save(user);
         
         // Initialize leave balances for the new user
         leaveBalanceService.initializeLeaveBalance(savedUser);

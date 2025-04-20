@@ -8,11 +8,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
-public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, UUID> {
+public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long> {
     List<LeaveBalance> findByUserOrderByCreatedAtDesc(User user);
-    List<LeaveBalance> findByUserAndYearOrderByCreatedAtDesc(User user, int year);
-    Optional<LeaveBalance> findByUserAndTypeAndYear(User user, LeaveType type, int year);
+    List<LeaveBalance> findByUserAndYearOrderByCreatedAtDesc(User user, Integer year);
+    Optional<LeaveBalance> findByUserAndTypeAndYear(User user, LeaveType type, Integer year);
+    boolean existsByUserAndTypeAndYear(User user, LeaveType type, Integer year);
 } 

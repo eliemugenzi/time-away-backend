@@ -6,6 +6,8 @@ import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
 import dev.elieweb.timeaway.leave.service.LeaveRequestService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,62 +19,60 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/leave-requests")
 @RequiredArgsConstructor
+@Tag(name = "Leave Request", description = "Leave Request Management APIs")
 public class LeaveRequestController {
     private final LeaveRequestService leaveRequestService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse> createLeaveRequest(@Valid @RequestBody LeaveRequestDTO request) {
+    @Operation(summary = "Create a new leave request")
+    public ResponseEntity<ApiResponse<LeaveRequestResponseDTO>> createLeaveRequest(@Valid @RequestBody LeaveRequestDTO request) {
         LeaveRequestResponseDTO response = leaveRequestService.createLeaveRequest(request);
         return ResponseEntity.ok(ApiResponse.success("Leave request created successfully", response));
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse> getAllLeaveRequests() {
-        List<LeaveRequestResponseDTO> requests = leaveRequestService.getAllLeaveRequests();
-        return ResponseEntity.ok(ApiResponse.success("Leave requests retrieved successfully", requests));
+    @Operation(summary = "Get all leave requests with optional status filter")
+    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDTO>>> getAllLeaveRequests(
+            @RequestParam(required = false) LeaveStatus status) {
+        List<LeaveRequestResponseDTO> response = leaveRequestService.getAllLeaveRequests(status);
+        return ResponseEntity.ok(ApiResponse.success("Leave requests retrieved successfully", response));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getLeaveRequest(@PathVariable UUID id) {
-        LeaveRequestResponseDTO request = leaveRequestService.getLeaveRequest(id);
-        return ResponseEntity.ok(ApiResponse.success("Leave request retrieved successfully", request));
+    @Operation(summary = "Get leave request by ID")
+    public ResponseEntity<ApiResponse<LeaveRequestResponseDTO>> getLeaveRequest(@PathVariable UUID id) {
+        LeaveRequestResponseDTO response = leaveRequestService.getLeaveRequest(id);
+        return ResponseEntity.ok(ApiResponse.success("Leave request retrieved successfully", response));
     }
 
-    @PutMapping("/{id}/approve")
-    public ResponseEntity<ApiResponse> approveLeaveRequest(@PathVariable UUID id) {
-        LeaveRequestUpdateDTO updateDTO = new LeaveRequestUpdateDTO();
-        updateDTO.setStatus(LeaveStatus.APPROVED);
-        LeaveRequestResponseDTO response = leaveRequestService.updateLeaveRequestStatus(id, updateDTO);
-        return ResponseEntity.ok(ApiResponse.success("Leave request approved successfully", response));
+    @GetMapping("/me")
+    @Operation(summary = "Get current user's leave requests with optional status filter")
+    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDTO>>> getCurrentUserLeaveRequests(
+            @RequestParam(required = false) LeaveStatus status) {
+        List<LeaveRequestResponseDTO> response = leaveRequestService.getCurrentUserLeaveRequests(status);
+        return ResponseEntity.ok(ApiResponse.success("Current user's leave requests retrieved successfully", response));
     }
 
-    @PutMapping("/{id}/reject")
-    public ResponseEntity<ApiResponse> rejectLeaveRequest(@PathVariable UUID id, @RequestBody(required = false) String rejectionReason) {
-        LeaveRequestUpdateDTO updateDTO = new LeaveRequestUpdateDTO();
-        updateDTO.setStatus(LeaveStatus.REJECTED);
-        updateDTO.setRejectionReason(rejectionReason);
-        LeaveRequestResponseDTO response = leaveRequestService.updateLeaveRequestStatus(id, updateDTO);
-        return ResponseEntity.ok(ApiResponse.success("Leave request rejected successfully", response));
-    }
-
-    @GetMapping("/my-requests")
-    public ResponseEntity<ApiResponse> getMyLeaveRequests() {
-        List<LeaveRequestResponseDTO> requests = leaveRequestService.getCurrentUserLeaveRequests();
-        return ResponseEntity.ok(ApiResponse.success("Your leave requests retrieved successfully", requests));
+    @GetMapping("/pending")
+    @Operation(summary = "Get pending leave requests")
+    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDTO>>> getPendingLeaveRequests() {
+        List<LeaveRequestResponseDTO> response = leaveRequestService.getPendingLeaveRequests();
+        return ResponseEntity.ok(ApiResponse.success("Pending leave requests retrieved successfully", response));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse> updateLeaveRequestStatus(
+    @Operation(summary = "Update leave request status")
+    public ResponseEntity<ApiResponse<LeaveRequestResponseDTO>> updateLeaveRequestStatus(
             @PathVariable UUID id,
-            @Valid @RequestBody LeaveRequestUpdateDTO request
-    ) {
+            @Valid @RequestBody LeaveRequestUpdateDTO request) {
         LeaveRequestResponseDTO response = leaveRequestService.updateLeaveRequestStatus(id, request);
         return ResponseEntity.ok(ApiResponse.success("Leave request status updated successfully", response));
     }
 
-    @GetMapping("/pending")
-    public ResponseEntity<ApiResponse> getPendingLeaveRequests() {
-        List<LeaveRequestResponseDTO> requests = leaveRequestService.getPendingLeaveRequests();
-        return ResponseEntity.ok(ApiResponse.success("Pending leave requests retrieved successfully", requests));
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete leave request")
+    public ResponseEntity<ApiResponse<Void>> deleteLeaveRequest(@PathVariable UUID id) {
+        leaveRequestService.deleteLeaveRequest(id);
+        return ResponseEntity.ok(ApiResponse.success("Leave request deleted successfully", null));
     }
 } 

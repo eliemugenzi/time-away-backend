@@ -10,16 +10,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
 @Data
+@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
 @Table(name = "users")
 public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
@@ -34,6 +33,10 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
@@ -41,26 +44,6 @@ public class User extends BaseEntity implements UserDetails {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_title_id")
     private JobTitle jobTitle;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private UserRole role = UserRole.ROLE_USER;
-
-    @Column(name = "joining_date", nullable = false)
-    private LocalDateTime joiningDate;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean active = true;
-
-    @PrePersist
-    protected void onCreate() {
-        super.onCreate();
-        if (joiningDate == null) {
-            joiningDate = LocalDateTime.now();
-        }
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -73,27 +56,22 @@ public class User extends BaseEntity implements UserDetails {
     }
 
     @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
     public boolean isAccountNonExpired() {
-        return active;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return active;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return active;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return active;
+        return !isDeleted();
     }
 } 

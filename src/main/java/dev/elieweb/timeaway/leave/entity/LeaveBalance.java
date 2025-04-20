@@ -7,14 +7,14 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Data
+@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
 @Table(name = "leave_balances")
 public class LeaveBalance extends BaseEntity {
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -23,15 +23,14 @@ public class LeaveBalance extends BaseEntity {
     private LeaveType type;
 
     @Column(nullable = false)
-    private int totalDays;
+    private Integer year;
 
     @Column(nullable = false)
-    private int usedDays;
+    private Integer totalDays;
 
     @Column(nullable = false)
-    private int year;
+    private Integer usedDays;
 
-    public int getRemainingDays() {
-        return totalDays - usedDays;
-    }
+    @Column(nullable = false)
+    private Integer remainingDays;
 } 

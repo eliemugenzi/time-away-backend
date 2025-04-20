@@ -10,15 +10,20 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Data
+@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
 @Table(name = "leave_requests")
 public class LeaveRequest extends BaseEntity {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String reason;
+    private LeaveType type;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -26,23 +31,19 @@ public class LeaveRequest extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LeaveType type;
+    private String reason;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LeaveStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "approver_id", referencedColumnName = "id")
-    private User approver;
-
+    @Column
     private String rejectionReason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approver_id")
+    private User approver;
 
     public LeaveType getLeaveType() {
         return type;

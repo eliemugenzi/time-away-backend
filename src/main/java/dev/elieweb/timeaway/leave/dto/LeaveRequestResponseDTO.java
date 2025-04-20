@@ -26,8 +26,23 @@ public class LeaveRequestResponseDTO {
     private String reason;
     private LeaveStatus status;
     private String rejectionReason;
+    
+    @Schema(description = "Details of the user who approved/rejected the request")
+    private ApproverDTO approver;
+    
     @Schema(hidden = true)
     private LocalDateTime createdAt;
     @Schema(hidden = true)
     private LocalDateTime updatedAt;
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ApproverDTO {
+        private UUID id;
+        private String firstName;
+        private String lastName;
+        private String email;
+    }
 } 

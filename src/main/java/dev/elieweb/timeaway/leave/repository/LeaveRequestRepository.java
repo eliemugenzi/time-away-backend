@@ -3,6 +3,7 @@ package dev.elieweb.timeaway.leave.repository;
 import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.leave.entity.LeaveRequest;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,8 @@ import java.util.UUID;
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID> {
     List<LeaveRequest> findByUserOrderByCreatedAtDesc(User user);
     List<LeaveRequest> findByStatusOrderByCreatedAtDesc(LeaveStatus status);
+    List<LeaveRequest> findByUserAndStatusOrderByCreatedAtDesc(User user, LeaveStatus status);
+    List<LeaveRequest> findAllByOrderByCreatedAtDesc();
     long countByStatus(LeaveStatus status);
     
     @Query("SELECT COUNT(l) FROM LeaveRequest l WHERE l.user.department.name = ?1")
@@ -31,4 +34,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
 
     @Query("SELECT AVG(TIMESTAMPDIFF(DAY, l.startDate, l.endDate) + 1) FROM LeaveRequest l WHERE l.user.department.name = ?1 AND l.status = 'APPROVED'")
     Double calculateAverageLeaveDurationForDepartment(String department);
+
+    boolean existsByUserAndStatus(User user, LeaveStatus status);
 } 

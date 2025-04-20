@@ -25,28 +25,28 @@ public class JobTitleController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new job title")
-    public ResponseEntity<ApiResponse> createJobTitle(@Valid @RequestBody JobTitleDTO jobTitleDTO) {
+    public ResponseEntity<ApiResponse<JobTitleDTO>> createJobTitle(@Valid @RequestBody JobTitleDTO jobTitleDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(jobTitleService.createJobTitle(jobTitleDTO));
     }
 
     @GetMapping
     @Operation(summary = "Get all job titles")
-    public ResponseEntity<ApiResponse> getAllJobTitles() {
+    public ResponseEntity<ApiResponse<List<JobTitleDTO>>> getAllJobTitles() {
         List<JobTitleDTO> jobTitles = jobTitleService.getAllJobTitles();
         return ResponseEntity.ok(ApiResponse.success("Job titles retrieved successfully", jobTitles));
     }
 
     @GetMapping("/active")
     @Operation(summary = "Get active job titles")
-    public ResponseEntity<ApiResponse> getActiveJobTitles() {
+    public ResponseEntity<ApiResponse<List<JobTitleDTO>>> getActiveJobTitles() {
         List<JobTitleDTO> jobTitles = jobTitleService.getActiveJobTitles();
         return ResponseEntity.ok(ApiResponse.success("Active job titles retrieved successfully", jobTitles));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get job title by ID")
-    public ResponseEntity<ApiResponse> getJobTitle(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<JobTitleDTO>> getJobTitle(@PathVariable UUID id) {
         JobTitleDTO jobTitle = jobTitleService.getJobTitle(id);
         return ResponseEntity.ok(ApiResponse.success("Job title retrieved successfully", jobTitle));
     }
@@ -54,7 +54,7 @@ public class JobTitleController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update job title")
-    public ResponseEntity<ApiResponse> updateJobTitle(
+    public ResponseEntity<ApiResponse<JobTitleDTO>> updateJobTitle(
             @PathVariable UUID id,
             @Valid @RequestBody JobTitleDTO jobTitleDTO
     ) {
@@ -64,14 +64,14 @@ public class JobTitleController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete job title")
-    public ResponseEntity<ApiResponse> deleteJobTitle(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<Void>> deleteJobTitle(@PathVariable UUID id) {
         return ResponseEntity.ok(jobTitleService.deleteJobTitle(id));
     }
 
     @GetMapping("/department/{departmentId}")
-    @Operation(summary = "Get job titles by department ID")
-    public ResponseEntity<ApiResponse> getJobTitlesByDepartment(@PathVariable UUID departmentId) {
-        List<JobTitleDTO> jobTitles = jobTitleService.getJobTitlesByDepartment(departmentId);
-        return ResponseEntity.ok(ApiResponse.success("Job titles retrieved successfully", jobTitles));
+    @Operation(summary = "Get job titles by department")
+    public ResponseEntity<ApiResponse<List<JobTitleDTO>>> getJobTitlesByDepartment(@PathVariable UUID departmentId) {
+        return ResponseEntity.ok(ApiResponse.success("Job titles retrieved successfully", 
+            jobTitleService.getJobTitlesByDepartment(departmentId)));
     }
 } 

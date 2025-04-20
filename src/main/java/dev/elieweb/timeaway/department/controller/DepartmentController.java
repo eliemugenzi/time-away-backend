@@ -2,6 +2,7 @@ package dev.elieweb.timeaway.department.controller;
 
 import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.department.dto.DepartmentDTO;
+import dev.elieweb.timeaway.department.dto.DepartmentResponseDTO;
 import dev.elieweb.timeaway.department.service.DepartmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,44 +24,46 @@ public class DepartmentController {
 
     @PostMapping
     @Operation(summary = "Create a new department")
-    public ResponseEntity<ApiResponse> createDepartment(@Valid @RequestBody DepartmentDTO departmentDTO) {
+    public ResponseEntity<ApiResponse<DepartmentResponseDTO>> createDepartment(@Valid @RequestBody DepartmentDTO departmentDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(departmentService.createDepartment(departmentDTO));
+                .body(ApiResponse.success("Department created successfully", departmentService.createDepartment(departmentDTO)));
     }
 
     @GetMapping
     @Operation(summary = "Get all departments")
-    public ResponseEntity<ApiResponse> getAllDepartments() {
-        List<DepartmentDTO> departments = departmentService.getAllDepartments();
+    public ResponseEntity<ApiResponse<List<DepartmentResponseDTO>>> getAllDepartments() {
+        List<DepartmentResponseDTO> departments = departmentService.getAllDepartments();
         return ResponseEntity.ok(ApiResponse.success("Departments retrieved successfully", departments));
     }
 
     @GetMapping("/active")
     @Operation(summary = "Get active departments")
-    public ResponseEntity<ApiResponse> getActiveDepartments() {
-        List<DepartmentDTO> departments = departmentService.getActiveDepartments();
+    public ResponseEntity<ApiResponse<List<DepartmentResponseDTO>>> getActiveDepartments() {
+        List<DepartmentResponseDTO> departments = departmentService.getAllDepartments();
         return ResponseEntity.ok(ApiResponse.success("Active departments retrieved successfully", departments));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get department by ID")
-    public ResponseEntity<ApiResponse> getDepartment(@PathVariable UUID id) {
-        DepartmentDTO department = departmentService.getDepartment(id);
+    public ResponseEntity<ApiResponse<DepartmentResponseDTO>> getDepartment(@PathVariable UUID id) {
+        DepartmentResponseDTO department = departmentService.getDepartment(id);
         return ResponseEntity.ok(ApiResponse.success("Department retrieved successfully", department));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update department")
-    public ResponseEntity<ApiResponse> updateDepartment(
+    public ResponseEntity<ApiResponse<DepartmentResponseDTO>> updateDepartment(
             @PathVariable UUID id,
             @Valid @RequestBody DepartmentDTO departmentDTO
     ) {
-        return ResponseEntity.ok(departmentService.updateDepartment(id, departmentDTO));
+        return ResponseEntity.ok(ApiResponse.success("Department updated successfully", 
+            departmentService.updateDepartment(id, departmentDTO)));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete department")
-    public ResponseEntity<ApiResponse> deleteDepartment(@PathVariable UUID id) {
-        return ResponseEntity.ok(departmentService.deleteDepartment(id));
+    public ResponseEntity<ApiResponse<Void>> deleteDepartment(@PathVariable UUID id) {
+        departmentService.deleteDepartment(id);
+        return ResponseEntity.ok(ApiResponse.success("Department deleted successfully", null));
     }
 }

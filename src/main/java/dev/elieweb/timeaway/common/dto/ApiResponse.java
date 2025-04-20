@@ -1,5 +1,6 @@
 package dev.elieweb.timeaway.common.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,35 +11,39 @@ import org.springframework.http.HttpStatus;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApiResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ApiResponse<T> {
+    private boolean success;
     private String message;
     private int status;
-    private Object data;
+    private T data;
 
-    public static ApiResponse success(Object data) {
-        return ApiResponse.builder()
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .success(true)
                 .status(HttpStatus.OK.value())
                 .data(data)
-                .message("Success")
                 .build();
     }
 
-    public static ApiResponse success(String message, Object data) {
-        return ApiResponse.builder()
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return ApiResponse.<T>builder()
+                .success(true)
                 .status(HttpStatus.OK.value())
-                .data(data)
                 .message(message)
+                .data(data)
                 .build();
     }
 
-    public static ApiResponse error(String message, int status) {
-        return ApiResponse.builder()
+    public static <T> ApiResponse<T> error(String message) {
+        return error(message, HttpStatus.BAD_REQUEST.value());
+    }
+
+    public static <T> ApiResponse<T> error(String message, int status) {
+        return ApiResponse.<T>builder()
+                .success(false)
                 .status(status)
                 .message(message)
                 .build();
-    }
-
-    public static ApiResponse error(String message) {
-        return error(message, HttpStatus.BAD_REQUEST.value());
     }
 } 
