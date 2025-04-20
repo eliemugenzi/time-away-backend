@@ -4,6 +4,7 @@ import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.auth.enums.UserRole;
 import dev.elieweb.timeaway.auth.service.CurrentUserService;
 import dev.elieweb.timeaway.leave.dto.LeaveBalanceDTO;
+import dev.elieweb.timeaway.leave.dto.LeaveBalanceInfo;
 import dev.elieweb.timeaway.leave.dto.LeaveBalanceResponseDTO;
 import dev.elieweb.timeaway.leave.entity.LeaveBalance;
 import dev.elieweb.timeaway.leave.entity.LeaveRequest;
@@ -238,14 +239,18 @@ public class LeaveBalanceService {
         };
     }
 
-    public Map<LeaveType, Integer> getCurrentBalances(User user) {
+    public Map<LeaveType, LeaveBalanceInfo> getCurrentBalances(User user) {
         int currentYear = LocalDate.now().getYear();
         List<LeaveBalance> balances = leaveBalanceRepository.findByUserAndYearOrderByCreatedAtDesc(user, currentYear);
         
         return balances.stream()
                 .collect(Collectors.toMap(
                     LeaveBalance::getType,
-                    LeaveBalance::getRemainingDays
+                    balance -> LeaveBalanceInfo.builder()
+                        .totalDays(balance.getTotalDays())
+                        .usedDays(balance.getUsedDays())
+                        .remainingDays(balance.getRemainingDays())
+                        .build()
                 ));
     }
 

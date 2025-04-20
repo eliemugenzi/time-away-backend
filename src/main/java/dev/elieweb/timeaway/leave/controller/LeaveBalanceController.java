@@ -2,6 +2,7 @@ package dev.elieweb.timeaway.leave.controller;
 
 import dev.elieweb.timeaway.auth.service.CurrentUserService;
 import dev.elieweb.timeaway.common.dto.ApiResponse;
+import dev.elieweb.timeaway.leave.dto.LeaveBalanceInfo;
 import dev.elieweb.timeaway.leave.enums.LeaveType;
 import dev.elieweb.timeaway.leave.service.LeaveBalanceService;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,8 @@ public class LeaveBalanceController {
     private final CurrentUserService currentUserService;
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<Map<LeaveType, Integer>>> getCurrentUserBalances() {
-        Map<LeaveType, Integer> balances = leaveBalanceService.getCurrentBalances(currentUserService.getCurrentUser());
+    public ResponseEntity<ApiResponse<Map<LeaveType, LeaveBalanceInfo>>> getCurrentUserBalances() {
+        Map<LeaveType, LeaveBalanceInfo> balances = leaveBalanceService.getCurrentBalances(currentUserService.getCurrentUser());
         return ResponseEntity.ok(ApiResponse.success("Leave balances retrieved successfully", balances));
     }
 } 
