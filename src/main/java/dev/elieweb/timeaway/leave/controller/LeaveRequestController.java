@@ -4,9 +4,11 @@ import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
+import dev.elieweb.timeaway.leave.dto.PaginatedLeaveRequestResponse;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
 import dev.elieweb.timeaway.leave.service.LeaveRequestService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +33,14 @@ public class LeaveRequestController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all leave requests with optional status filter")
-    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDTO>>> getAllLeaveRequests(
-            @RequestParam(required = false) LeaveStatus status) {
-        List<LeaveRequestResponseDTO> response = leaveRequestService.getAllLeaveRequests(status);
+    @Operation(summary = "Get all leave requests with optional status filter and pagination")
+    public ResponseEntity<ApiResponse<PaginatedLeaveRequestResponse>> getAllLeaveRequests(
+            @RequestParam(required = false) LeaveStatus status,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int pageNo,
+            @Parameter(description = "Number of items per page", example = "10")
+            @RequestParam(defaultValue = "10") int pageSize) {
+        PaginatedLeaveRequestResponse response = leaveRequestService.getAllLeaveRequests(status, pageNo, pageSize);
         return ResponseEntity.ok(ApiResponse.success("Leave requests retrieved successfully", response));
     }
 
@@ -46,10 +52,14 @@ public class LeaveRequestController {
     }
 
     @GetMapping("/me")
-    @Operation(summary = "Get current user's leave requests with optional status filter")
-    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDTO>>> getCurrentUserLeaveRequests(
-            @RequestParam(required = false) LeaveStatus status) {
-        List<LeaveRequestResponseDTO> response = leaveRequestService.getCurrentUserLeaveRequests(status);
+    @Operation(summary = "Get current user's leave requests with optional status filter and pagination")
+    public ResponseEntity<ApiResponse<PaginatedLeaveRequestResponse>> getCurrentUserLeaveRequests(
+            @RequestParam(required = false) LeaveStatus status,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int pageNo,
+            @Parameter(description = "Number of items per page", example = "10")
+            @RequestParam(defaultValue = "10") int pageSize) {
+        PaginatedLeaveRequestResponse response = leaveRequestService.getCurrentUserLeaveRequests(status, pageNo, pageSize);
         return ResponseEntity.ok(ApiResponse.success("Current user's leave requests retrieved successfully", response));
     }
 

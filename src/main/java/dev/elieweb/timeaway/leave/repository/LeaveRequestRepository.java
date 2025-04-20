@@ -3,7 +3,8 @@ package dev.elieweb.timeaway.leave.repository;
 import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.leave.entity.LeaveRequest;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -14,10 +15,14 @@ import java.util.UUID;
 
 @Repository
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID> {
+    Page<LeaveRequest> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+    Page<LeaveRequest> findByStatusOrderByCreatedAtDesc(LeaveStatus status, Pageable pageable);
+    Page<LeaveRequest> findByUserAndStatusOrderByCreatedAtDesc(User user, LeaveStatus status, Pageable pageable);
+    Page<LeaveRequest> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    
+    // Keep non-paginated methods for specific use cases
     List<LeaveRequest> findByUserOrderByCreatedAtDesc(User user);
     List<LeaveRequest> findByStatusOrderByCreatedAtDesc(LeaveStatus status);
-    List<LeaveRequest> findByUserAndStatusOrderByCreatedAtDesc(User user, LeaveStatus status);
-    List<LeaveRequest> findAllByOrderByCreatedAtDesc();
     long countByStatus(LeaveStatus status);
     
     @Query("SELECT COUNT(l) FROM LeaveRequest l WHERE l.user.department.name = ?1")

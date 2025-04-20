@@ -7,11 +7,15 @@ import dev.elieweb.timeaway.common.exception.BadRequestException;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
+import dev.elieweb.timeaway.leave.dto.PaginatedLeaveRequestResponse;
 import dev.elieweb.timeaway.leave.entity.LeaveBalance;
 import dev.elieweb.timeaway.leave.entity.LeaveRequest;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
 import dev.elieweb.timeaway.leave.repository.LeaveRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,44 +78,64 @@ public class LeaveRequestService {
         return mapToResponseDTO(leaveRequest);
     }
 
-    public List<LeaveRequestResponseDTO> getAllLeaveRequests(LeaveStatus status) {
+    public PaginatedLeaveRequestResponse getAllLeaveRequests(LeaveStatus status, int pageNo, int pageSize) {
         User currentUser = currentUserService.getCurrentUser();
-        List<LeaveRequest> requests;
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").descending());
+        Page<LeaveRequest> page;
 
         if (currentUser.getRole() == UserRole.ROLE_ADMIN || 
             currentUser.getRole() == UserRole.ROLE_MANAGER || 
             currentUser.getRole() == UserRole.ROLE_HR) {
             if (status != null) {
-                requests = leaveRequestRepository.findByStatusOrderByCreatedAtDesc(status);
+                page = leaveRequestRepository.findByStatusOrderByCreatedAtDesc(status, pageable);
             } else {
-                requests = leaveRequestRepository.findAllByOrderByCreatedAtDesc();
+                page = leaveRequestRepository.findAllByOrderByCreatedAtDesc(pageable);
             }
         } else {
             if (status != null) {
-                requests = leaveRequestRepository.findByUserAndStatusOrderByCreatedAtDesc(currentUser, status);
+                page = leaveRequestRepository.findByUserAndStatusOrderByCreatedAtDesc(currentUser, status, pageable);
             } else {
-                requests = leaveRequestRepository.findByUserOrderByCreatedAtDesc(currentUser);
+                page = leaveRequestRepository.findByUserOrderByCreatedAtDesc(currentUser, pageable);
             }
         }
 
-        return requests.stream()
+        List<LeaveRequestResponseDTO> content = page.getContent().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
+
+        return PaginatedLeaveRequestResponse.builder()
+                .content(content)
+                .pageNo(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
     }
 
-    public List<LeaveRequestResponseDTO> getCurrentUserLeaveRequests(LeaveStatus status) {
+    public PaginatedLeaveRequestResponse getCurrentUserLeaveRequests(LeaveStatus status, int pageNo, int pageSize) {
         User currentUser = currentUserService.getCurrentUser();
-        List<LeaveRequest> requests;
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").descending());
+        Page<LeaveRequest> page;
         
         if (status != null) {
-            requests = leaveRequestRepository.findByUserAndStatusOrderByCreatedAtDesc(currentUser, status);
+            page = leaveRequestRepository.findByUserAndStatusOrderByCreatedAtDesc(currentUser, status, pageable);
         } else {
-            requests = leaveRequestRepository.findByUserOrderByCreatedAtDesc(currentUser);
+            page = leaveRequestRepository.findByUserOrderByCreatedAtDesc(currentUser, pageable);
         }
         
-        return requests.stream()
+        List<LeaveRequestResponseDTO> content = page.getContent().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
+
+        return PaginatedLeaveRequestResponse.builder()
+                .content(content)
+                .pageNo(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
     }
 
     public List<LeaveRequestResponseDTO> getPendingLeaveRequests() {

@@ -13,14 +13,12 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    private boolean success;
     private String message;
     private int status;
     private T data;
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
-                .success(true)
                 .status(HttpStatus.OK.value())
                 .data(data)
                 .build();
@@ -28,7 +26,6 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> success(String message, T data) {
         return ApiResponse.<T>builder()
-                .success(true)
                 .status(HttpStatus.OK.value())
                 .message(message)
                 .data(data)
@@ -41,9 +38,8 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> error(String message, int status) {
         return ApiResponse.<T>builder()
-                .success(false)
                 .status(status)
                 .message(message)
                 .build();
     }
-} 
+}
