@@ -108,6 +108,20 @@ public class LeaveBalanceService {
         }
     }
 
+    @Transactional
+    public void initializeLeaveBalancesForExistingUsers() {
+        int currentYear = LocalDate.now().getYear();
+        List<User> allUsers = userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        
+        for (User user : allUsers) {
+            // Check if user already has leave balances for the current year
+            List<LeaveBalance> existingBalances = leaveBalanceRepository.findByUserAndYearOrderByCreatedAtDesc(user, currentYear);
+            if (existingBalances.isEmpty()) {
+                initializeLeaveBalance(user);
+            }
+        }
+    }
+
     private LeaveBalance getOrCreateBalance(User user, LeaveType leaveType) {
         int currentYear = LocalDate.now().getYear();
         return leaveBalanceRepository.findByUserAndTypeAndYear(user, leaveType, currentYear)
