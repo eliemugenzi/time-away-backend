@@ -102,6 +102,16 @@ public class JobTitleService {
         return ApiResponse.success("Job title deleted successfully");
     }
 
+    public List<JobTitleDTO> getJobTitlesByDepartment(UUID departmentId) {
+        departmentRepository.findByIdAndDeletedFalse(departmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + departmentId));
+
+        return jobTitleRepository.findByDepartmentIdAndDeletedFalseOrderByNameAsc(departmentId)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
     private JobTitleDTO mapToDTO(JobTitle jobTitle) {
         return JobTitleDTO.builder()
                 .id(jobTitle.getId())

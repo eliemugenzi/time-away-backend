@@ -67,4 +67,11 @@ public class JobTitleController {
     public ResponseEntity<ApiResponse> deleteJobTitle(@PathVariable UUID id) {
         return ResponseEntity.ok(jobTitleService.deleteJobTitle(id));
     }
+
+    @GetMapping("/department/{departmentId}")
+    @Operation(summary = "Get job titles by department ID")
+    public ResponseEntity<ApiResponse> getJobTitlesByDepartment(@PathVariable UUID departmentId) {
+        List<JobTitleDTO> jobTitles = jobTitleService.getJobTitlesByDepartment(departmentId);
+        return ResponseEntity.ok(ApiResponse.success("Job titles retrieved successfully", jobTitles));
+    }
 } 

@@ -26,9 +26,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-   "/api/v1/auth/register",
+        "/api/v1/auth/register",
         "/api/v1/auth/login",
         "/api/v1/auth/refresh-token",
+        "/api/v1/departments",
+        "/api/v1/job-titles",
         "/swagger-ui",
         "/v3/api-docs",
         "/api-docs",

@@ -16,4 +16,5 @@ public interface JobTitleRepository extends JpaRepository<JobTitle, UUID> {
     boolean existsByNameIgnoreCase(String name);
     List<JobTitle> findByDeletedFalseOrderByNameAsc();
     Optional<JobTitle> findByIdAndDeletedFalse(UUID id);
+    List<JobTitle> findByDepartmentIdAndDeletedFalseOrderByNameAsc(UUID departmentId);
 } 

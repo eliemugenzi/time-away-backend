@@ -58,8 +58,11 @@ public class SecurityConfig {
                             "/swagger-resources/**",
                             "/webjars/**"
                         ).permitAll()
-                        // API endpoints
+                        // Public API endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/departments/**").permitAll()
+                        .requestMatchers("/api/v1/job-titles/**").permitAll()
+                        // Protected endpoints
                         .requestMatchers("/api/v1/leave-requests/**").authenticated()
                         .requestMatchers("/api/v1/leave-balances/**").authenticated()
                         .requestMatchers("/api/v1/leave-statistics/**").hasAnyRole("ADMIN", "MANAGER")
