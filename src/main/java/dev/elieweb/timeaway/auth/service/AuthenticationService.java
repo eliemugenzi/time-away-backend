@@ -72,6 +72,7 @@ public class AuthenticationService {
                 .refreshToken(refreshToken.getToken())
                 .firstName(savedUser.getFirstName())
                 .lastName(savedUser.getLastName())
+                .role(savedUser.getRole())
                 .build();
     }
 
@@ -94,6 +95,7 @@ public class AuthenticationService {
                 .refreshToken(refreshToken.getToken())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .role(user.getRole())
                 .build();
     }
 
@@ -101,10 +103,14 @@ public class AuthenticationService {
         return refreshTokenService.findByToken(refreshToken)
                 .map(refreshTokenService::verifyExpiration)
                 .map(token -> {
-                    String accessToken = jwtService.generateToken(token.getUser());
+                    User user = token.getUser();
+                    String accessToken = jwtService.generateToken(user);
                     return AuthenticationResponse.builder()
                             .accessToken(accessToken)
                             .refreshToken(refreshToken)
+                            .firstName(user.getFirstName())
+                            .lastName(user.getLastName())
+                            .role(user.getRole())
                             .build();
                 })
                 .orElseThrow(() -> new TokenRefreshException(refreshToken, "Refresh token not found in database"));
