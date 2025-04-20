@@ -70,6 +70,20 @@ public class LeaveRequestController {
         return ResponseEntity.ok(ApiResponse.success("Pending leave requests retrieved successfully", response));
     }
 
+    @GetMapping("/search")
+    @Operation(summary = "Search leave requests by employee name with optional status filter and pagination")
+    public ResponseEntity<ApiResponse<PaginatedLeaveRequestResponse>> searchLeaveRequests(
+            @Parameter(description = "Employee name to search for (can be partial name)", required = true)
+            @RequestParam String employeeName,
+            @RequestParam(required = false) LeaveStatus status,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int pageNo,
+            @Parameter(description = "Number of items per page", example = "10")
+            @RequestParam(defaultValue = "10") int pageSize) {
+        PaginatedLeaveRequestResponse response = leaveRequestService.searchLeaveRequests(employeeName, status, pageNo, pageSize);
+        return ResponseEntity.ok(ApiResponse.success("Leave requests search completed successfully", response));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Update leave request status")
     public ResponseEntity<ApiResponse<LeaveRequestResponseDTO>> updateLeaveRequestStatus(

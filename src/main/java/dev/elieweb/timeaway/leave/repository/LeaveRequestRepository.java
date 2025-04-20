@@ -20,6 +20,20 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
     Page<LeaveRequest> findByUserAndStatusOrderByCreatedAtDesc(User user, LeaveStatus status, Pageable pageable);
     Page<LeaveRequest> findAllByOrderByCreatedAtDesc(Pageable pageable);
     
+    @Query("SELECT l FROM LeaveRequest l WHERE " +
+           "LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
+           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', ?1, '%')) " +
+           "ORDER BY l.createdAt DESC")
+    Page<LeaveRequest> searchByEmployeeName(String employeeName, Pageable pageable);
+    
+    @Query("SELECT l FROM LeaveRequest l WHERE " +
+           "(LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
+           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', ?1, '%'))) " +
+           "AND l.status = ?2 ORDER BY l.createdAt DESC")
+    Page<LeaveRequest> searchByEmployeeNameAndStatus(String employeeName, LeaveStatus status, Pageable pageable);
+    
     // Keep non-paginated methods for specific use cases
     List<LeaveRequest> findByUserOrderByCreatedAtDesc(User user);
     List<LeaveRequest> findByStatusOrderByCreatedAtDesc(LeaveStatus status);

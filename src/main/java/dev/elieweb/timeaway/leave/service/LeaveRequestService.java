@@ -263,4 +263,34 @@ public class LeaveRequestService {
                 .updatedAt(leaveRequest.getUpdatedAt())
                 .build();
     }
+
+    public PaginatedLeaveRequestResponse searchLeaveRequests(String employeeName, LeaveStatus status, int pageNo, int pageSize) {
+        User currentUser = currentUserService.getCurrentUser();
+        if (currentUser.getRole() != UserRole.ROLE_ADMIN && 
+            currentUser.getRole() != UserRole.ROLE_HR) {
+            throw new RuntimeException("Only admins and HR can search leave requests by employee name");
+        }
+
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").descending());
+        Page<LeaveRequest> page;
+
+        if (status != null) {
+            page = leaveRequestRepository.searchByEmployeeNameAndStatus(employeeName, status, pageable);
+        } else {
+            page = leaveRequestRepository.searchByEmployeeName(employeeName, pageable);
+        }
+
+        List<LeaveRequestResponseDTO> content = page.getContent().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+
+        return PaginatedLeaveRequestResponse.builder()
+                .content(content)
+                .pageNo(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
+    }
 } 
