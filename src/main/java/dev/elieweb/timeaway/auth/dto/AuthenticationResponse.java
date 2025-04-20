@@ -13,4 +13,6 @@ public class AuthenticationResponse {
     private String accessToken;
     private String refreshToken;
     private String tokenType = "Bearer";
+    private String firstName;
+    private String lastName;
 } 
