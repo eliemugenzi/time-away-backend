@@ -29,6 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         "/api/v1/auth/register",
         "/api/v1/auth/login",
         "/api/v1/auth/refresh-token",
+        "/api/v1/auth/microsoft/callback",
+        "/oauth2/authorization",
         "/api/v1/departments",
         "/api/v1/job-titles",
         "/swagger-ui",
@@ -41,6 +43,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getRequestURI();
+        
+        // Explicitly check for OAuth2 and Microsoft auth endpoints
+        if (path.contains("/api/v1/auth/microsoft/") || path.startsWith("/oauth2/authorization")) {
+            return true;
+        }
+        
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
@@ -50,6 +58,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        if (shouldNotFilter(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;

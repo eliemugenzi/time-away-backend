@@ -18,6 +18,38 @@ spring:
     baseline-version: 0
     clean-on-validation-error: true
     clean-disabled: false
+  security:
+    oauth2:
+      client:
+        registration:
+          azure-ad:
+            provider: azure-ad
+            client-id: ${AZURE_CLIENT_ID}
+            client-secret: ${AZURE_CLIENT_SECRET}
+            scope:
+              - openid
+              - profile
+              - email
+              - offline_access
+              - User.Read
+              - User.ReadBasic.All
+            client-name: Azure AD
+            redirect-uri: ${AZURE_REDIRECT_URI:http://localhost:8080/api/v1/auth/microsoft/callback}
+            client-authentication-method: post
+            authorization-grant-type: authorization_code
+        provider:
+          azure-ad:
+            issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0
+            authorization-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token
+            jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys
+            user-info-uri: https://graph.microsoft.com/oidc/userinfo
+            user-name-attribute: preferred_username
+
+azure:
+  activedirectory:
+    tenant-id: ${AZURE_TENANT_ID}
+    active-directory-groups: ${AZURE_AD_GROUPS:}
 
 server:
   port: 8080
@@ -45,4 +77,12 @@ app:
 sendgrid:
   api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key-here}
   from-email: ${SENDGRID_FROM_EMAIL:noreply@timeaway.com}
-  from-name: ${SENDGRID_FROM_NAME:TimeAway} 
+  from-name: ${SENDGRID_FROM_NAME:TimeAway}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.oauth2: DEBUG
+    org.springframework.security.oauth2: TRACE
+    dev.elieweb.timeaway: DEBUG 
