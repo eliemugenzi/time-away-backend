@@ -14,7 +14,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Builder
 @NoArgsConstructor
@@ -63,6 +64,11 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override

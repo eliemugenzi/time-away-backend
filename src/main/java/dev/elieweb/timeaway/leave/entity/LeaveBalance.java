@@ -6,7 +6,8 @@ import dev.elieweb.timeaway.leave.enums.LeaveType;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Builder
 @NoArgsConstructor
