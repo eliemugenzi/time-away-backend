@@ -46,12 +46,16 @@ spring:
             user-info-uri: https://graph.microsoft.com/oidc/userinfo
             user-name-attribute: preferred_username
 
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+
 app:
   frontend:
-    url: ${FRONTEND_URL:http://localhost:3000}
+    url: ${APP_FRONTEND_URL:http://localhost:3000}
   jwt:
     refresh-token:
-      expiration: 86400000 # 24 hours
+      expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 24 hours
 
 azure:
   activedirectory:

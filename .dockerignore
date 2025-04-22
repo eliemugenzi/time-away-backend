@@ -1,0 +1,20 @@
+# Git
+.git
+.gitignore
+
+# Maven
+target/
+!target/*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# OS specific
+.DS_Store
+Thumbs.db 

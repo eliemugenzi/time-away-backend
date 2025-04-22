@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/timeaway
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-dummy-key}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=timeaway
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: 

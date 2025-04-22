@@ -37,6 +37,10 @@ import org.springframework.context.annotation.Configuration;
             url = "http://localhost:8080"
         ),
         @Server(
+            description = "Docker Local ENV",
+            url = "http://localhost:8083"
+        ),
+        @Server(
             description = "PROD ENV",
             url = "https://time-away-backend-production.up.railway.app"
         )
