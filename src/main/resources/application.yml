@@ -46,6 +46,13 @@ spring:
             user-info-uri: https://graph.microsoft.com/oidc/userinfo
             user-name-attribute: preferred_username
 
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:3000}
+  jwt:
+    refresh-token:
+      expiration: 86400000 # 24 hours
+
 azure:
   activedirectory:
     tenant-id: ${AZURE_TENANT_ID}
@@ -66,13 +73,6 @@ springdoc:
     tryItOutEnabled: true
     filter: true
   packages-to-scan: dev.elieweb.timeaway
-
-jwt:
-  expiration: 3600000 # 1 hour
-app:
-  jwt:
-    refresh-token:
-      expiration: 86400000 # 24 hours
 
 sendgrid:
   api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key-here}

@@ -15,43 +15,67 @@ import java.util.UUID;
 
 @Repository
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID> {
+    @Query(value = "SELECT DISTINCT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver WHERE l.user = :user ORDER BY l.createdAt DESC",
+           countQuery = "SELECT COUNT(l) FROM LeaveRequest l WHERE l.user = :user")
     Page<LeaveRequest> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+
+    @Query(value = "SELECT DISTINCT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver WHERE l.status = :status ORDER BY l.createdAt DESC",
+           countQuery = "SELECT COUNT(l) FROM LeaveRequest l WHERE l.status = :status")
     Page<LeaveRequest> findByStatusOrderByCreatedAtDesc(LeaveStatus status, Pageable pageable);
+
+    @Query(value = "SELECT DISTINCT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver WHERE l.user = :user AND l.status = :status ORDER BY l.createdAt DESC",
+           countQuery = "SELECT COUNT(l) FROM LeaveRequest l WHERE l.user = :user AND l.status = :status")
     Page<LeaveRequest> findByUserAndStatusOrderByCreatedAtDesc(User user, LeaveStatus status, Pageable pageable);
+
+    @Query(value = "SELECT DISTINCT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver ORDER BY l.createdAt DESC",
+           countQuery = "SELECT COUNT(l) FROM LeaveRequest l")
     Page<LeaveRequest> findAllByOrderByCreatedAtDesc(Pageable pageable);
     
-    @Query("SELECT l FROM LeaveRequest l WHERE " +
-           "LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
-           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
-           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', ?1, '%')) " +
-           "ORDER BY l.createdAt DESC")
+    @Query(value = "SELECT DISTINCT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver WHERE " +
+           "LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', :employeeName, '%')) " +
+           "ORDER BY l.createdAt DESC",
+           countQuery = "SELECT COUNT(l) FROM LeaveRequest l WHERE " +
+           "LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', :employeeName, '%'))")
     Page<LeaveRequest> searchByEmployeeName(String employeeName, Pageable pageable);
     
-    @Query("SELECT l FROM LeaveRequest l WHERE " +
-           "(LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
-           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', ?1, '%')) OR " +
-           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', ?1, '%'))) " +
-           "AND l.status = ?2 ORDER BY l.createdAt DESC")
+    @Query(value = "SELECT DISTINCT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver WHERE " +
+           "(LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', :employeeName, '%'))) " +
+           "AND l.status = :status ORDER BY l.createdAt DESC",
+           countQuery = "SELECT COUNT(l) FROM LeaveRequest l WHERE " +
+           "(LOWER(CONCAT(l.user.firstName, ' ', l.user.lastName)) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', :employeeName, '%'))) " +
+           "AND l.status = :status")
     Page<LeaveRequest> searchByEmployeeNameAndStatus(String employeeName, LeaveStatus status, Pageable pageable);
     
     // Keep non-paginated methods for specific use cases
+    @Query("SELECT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver WHERE l.user = :user ORDER BY l.createdAt DESC")
     List<LeaveRequest> findByUserOrderByCreatedAtDesc(User user);
+
+    @Query("SELECT l FROM LeaveRequest l LEFT JOIN FETCH l.user LEFT JOIN FETCH l.approver WHERE l.status = :status ORDER BY l.createdAt DESC")
     List<LeaveRequest> findByStatusOrderByCreatedAtDesc(LeaveStatus status);
+
     long countByStatus(LeaveStatus status);
     
-    @Query("SELECT COUNT(l) FROM LeaveRequest l WHERE l.user.department.name = ?1")
+    @Query("SELECT COUNT(l) FROM LeaveRequest l WHERE l.user.department.name = :department")
     long countByUserDepartment(String department);
     
-    @Query("SELECT COUNT(l) FROM LeaveRequest l WHERE l.user.department.name = ?1 AND l.status = ?2")
+    @Query("SELECT COUNT(l) FROM LeaveRequest l WHERE l.user.department.name = :department AND l.status = :status")
     long countByUserDepartmentAndStatus(String department, LeaveStatus status);
 
-    @Query("SELECT COUNT(DISTINCT l.user) FROM LeaveRequest l WHERE l.user.department.name = ?1 AND l.startDate <= ?2 AND l.endDate >= ?2 AND l.status = 'APPROVED'")
+    @Query("SELECT COUNT(DISTINCT l.user) FROM LeaveRequest l WHERE l.user.department.name = :department AND l.startDate <= :date AND l.endDate >= :date AND l.status = 'APPROVED'")
     int countEmployeesOnLeave(String department, LocalDate date);
 
     @Query("SELECT AVG(TIMESTAMPDIFF(DAY, l.startDate, l.endDate) + 1) FROM LeaveRequest l WHERE l.status = 'APPROVED'")
     Double calculateAverageLeaveDuration();
 
-    @Query("SELECT AVG(TIMESTAMPDIFF(DAY, l.startDate, l.endDate) + 1) FROM LeaveRequest l WHERE l.user.department.name = ?1 AND l.status = 'APPROVED'")
+    @Query("SELECT AVG(TIMESTAMPDIFF(DAY, l.startDate, l.endDate) + 1) FROM LeaveRequest l WHERE l.user.department.name = :department AND l.status = 'APPROVED'")
     Double calculateAverageLeaveDurationForDepartment(String department);
 
     boolean existsByUserAndStatus(User user, LeaveStatus status);

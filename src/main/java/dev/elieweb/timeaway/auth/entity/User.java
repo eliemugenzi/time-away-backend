@@ -50,6 +50,17 @@ public class User extends BaseEntity implements UserDetails {
     private JobTitle jobTitle;
 
     @Override
+    public String toString() {
+        return "User{" +
+                "id=" + getId() +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", role=" + role +
+                '}';
+    }
+
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }

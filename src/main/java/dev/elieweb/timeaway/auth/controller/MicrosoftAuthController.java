@@ -11,10 +11,13 @@ import dev.elieweb.timeaway.department.entity.Department;
 import dev.elieweb.timeaway.department.repository.DepartmentRepository;
 import dev.elieweb.timeaway.leave.service.LeaveBalanceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,6 +52,8 @@ import java.util.HashMap;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
+import java.io.IOException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @RestController
@@ -67,19 +72,27 @@ public class MicrosoftAuthController {
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final RestTemplate restTemplate;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     private String convertToFormData(MultiValueMap<String, String> params) {
         return params.entrySet().stream()
             .map(entry -> entry.getKey() + "=" + URLEncoder.encode(entry.getValue().get(0), StandardCharsets.UTF_8))
             .collect(Collectors.joining("&"));
     }
 
-    @GetMapping("/callback")
     @Operation(summary = "Handle Microsoft OAuth2 callback")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "302", description = "Redirect to frontend with authentication tokens"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or missing parameters")
+    })
+    @GetMapping("/callback")
     @Transactional
-    public ResponseEntity<ApiResponse> handleCallback(
+    public void handleCallback(
             @RequestParam("code") String code,
             @RequestParam("state") String state,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
         
         log.info("Starting OAuth2 callback processing...");
 
@@ -89,9 +102,8 @@ public class MicrosoftAuthController {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             
             if (clientRegistration == null) {
-                log.error("No client registration found for Azure AD");
-                return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Authentication failed: no client registration found"));
+                redirectWithError(response, "Authentication failed: no client registration found");
+                return;
             }
 
             // Exchange the authorization code for tokens
@@ -118,15 +130,15 @@ public class MicrosoftAuthController {
                 
                 if (!tokenResponse.getStatusCode().is2xxSuccessful()) {
                     log.error("Token exchange failed with status: {}", tokenResponse.getStatusCode());
-                    return ResponseEntity.status(tokenResponse.getStatusCode())
-                        .body(ApiResponse.error("Token exchange failed: " + tokenResponse.getStatusCode()));
+                    redirectWithError(response, "Token exchange failed: " + tokenResponse.getStatusCode());
+                    return;
                 }
 
                 Map<String, String> tokens = tokenResponse.getBody();
                 if (tokens == null || !tokens.containsKey("access_token")) {
                     log.error("Invalid token response - missing access token");
-                    return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Invalid token response"));
+                    redirectWithError(response, "Invalid token response");
+                    return;
                 }
 
                 String idToken = tokens.get("id_token");
@@ -136,8 +148,8 @@ public class MicrosoftAuthController {
                 String[] idTokenParts = idToken.split("\\.");
                 if (idTokenParts.length != 3) {
                     log.error("Invalid ID token format");
-                    return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Authentication failed: invalid ID token format"));
+                    redirectWithError(response, "Authentication failed: invalid ID token format");
+                    return;
                 }
 
                 // Decode the payload (second part of the JWT)
@@ -150,8 +162,8 @@ public class MicrosoftAuthController {
 
                 if (email == null || email.isEmpty()) {
                     log.error("No email found in ID token claims");
-                    return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Authentication failed: email not found"));
+                    redirectWithError(response, "Authentication failed: email not found");
+                    return;
                 }
 
                 // Find or create user
@@ -191,35 +203,57 @@ public class MicrosoftAuthController {
                         .build();
 
                 log.info("Authentication successful for user: {}", email);
-                return ResponseEntity.ok(ApiResponse.success(
-                    "Authentication successful",
-                    authResponse
-                ));
+                
+                // Redirect to frontend with success response
+                String successUrl = UriComponentsBuilder.fromUriString(frontendUrl)
+                    .path("/auth/callback")
+                    .queryParam("token", jwtToken)
+                    .queryParam("refreshToken", refreshToken.getToken())
+                    .queryParam("email", user.getEmail())
+                    .queryParam("firstName", user.getFirstName())
+                    .queryParam("lastName", user.getLastName())
+                    .queryParam("role", user.getRole())
+                    .build()
+                    .encode()
+                    .toUriString();
+
+                response.sendRedirect(successUrl);
                 
             } catch (HttpClientErrorException e) {
                 log.error("Token exchange failed: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
-                return ResponseEntity.status(e.getStatusCode())
-                        .body(ApiResponse.error("Token exchange failed: " + e.getMessage()));
+                redirectWithError(response, "Token exchange failed: " + e.getMessage());
             } catch (Exception e) {
                 log.error("Unexpected error during token exchange: {}", e.getMessage());
-                return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Unexpected error during token exchange: " + e.getMessage()));
+                redirectWithError(response, "Unexpected error during authentication");
             }
         } catch (Exception e) {
             log.error("Error during OAuth2 callback processing: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("Authentication failed: " + e.getMessage()));
+            redirectWithError(response, "Authentication failed: " + e.getMessage());
         }
     }
 
-    @GetMapping("/error")
+    private void redirectWithError(HttpServletResponse response, String error) throws IOException {
+        String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl)
+            .path("/auth/callback")
+            .queryParam("error", URLEncoder.encode(error, StandardCharsets.UTF_8))
+            .build()
+            .encode()
+            .toUriString();
+        
+        response.sendRedirect(errorUrl);
+    }
+
     @Operation(summary = "Handle Microsoft OAuth2 authentication failure")
-    public ResponseEntity<ApiResponse> handleError(
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "302", description = "Redirect to frontend with error message")
+    })
+    @GetMapping("/error")
+    public void handleError(
             @RequestParam(value = "error", required = false) String error,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
         log.error("OAuth2 authentication error: {}", error);
         String errorMessage = error != null ? error : "Authentication failed";
-        return ResponseEntity.status(401)
-            .body(ApiResponse.error(errorMessage));
+        redirectWithError(response, errorMessage);
     }
 } 
