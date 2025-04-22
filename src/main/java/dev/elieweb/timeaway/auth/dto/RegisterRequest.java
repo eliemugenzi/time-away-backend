@@ -6,17 +6,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Schema(description = "DTO for user registration")
 public class RegisterRequest {
     @Schema(description = "User's first name", example = "John")
@@ -46,6 +38,179 @@ public class RegisterRequest {
     private UUID jobTitleId;
 
     @Schema(description = "User's role", example = "ROLE_USER", defaultValue = "ROLE_USER")
-    @Builder.Default
     private UserRole role = UserRole.ROLE_USER;
+
+    // Default constructor
+    public RegisterRequest() {
+    }
+
+    // All-args constructor
+    public RegisterRequest(String firstName, String lastName, String email, String password, 
+                         UUID departmentId, UUID jobTitleId, UserRole role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.departmentId = departmentId;
+        this.jobTitleId = jobTitleId;
+        this.role = role != null ? role : UserRole.ROLE_USER;
+    }
+
+    // Getters and setters
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public UUID getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(UUID departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public UUID getJobTitleId() {
+        return jobTitleId;
+    }
+
+    public void setJobTitleId(UUID jobTitleId) {
+        this.jobTitleId = jobTitleId;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role != null ? role : UserRole.ROLE_USER;
+    }
+
+    // Builder pattern
+    public static RegisterRequestBuilder builder() {
+        return new RegisterRequestBuilder();
+    }
+
+    public static class RegisterRequestBuilder {
+        private String firstName;
+        private String lastName;
+        private String email;
+        private String password;
+        private UUID departmentId;
+        private UUID jobTitleId;
+        private UserRole role = UserRole.ROLE_USER;
+
+        RegisterRequestBuilder() {
+        }
+
+        public RegisterRequestBuilder firstName(String firstName) {
+            this.firstName = firstName;
+            return this;
+        }
+
+        public RegisterRequestBuilder lastName(String lastName) {
+            this.lastName = lastName;
+            return this;
+        }
+
+        public RegisterRequestBuilder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public RegisterRequestBuilder password(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public RegisterRequestBuilder departmentId(UUID departmentId) {
+            this.departmentId = departmentId;
+            return this;
+        }
+
+        public RegisterRequestBuilder jobTitleId(UUID jobTitleId) {
+            this.jobTitleId = jobTitleId;
+            return this;
+        }
+
+        public RegisterRequestBuilder role(UserRole role) {
+            this.role = role;
+            return this;
+        }
+
+        public RegisterRequest build() {
+            return new RegisterRequest(firstName, lastName, email, password, 
+                                    departmentId, jobTitleId, role);
+        }
+    }
+
+    // equals and hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RegisterRequest that = (RegisterRequest) o;
+
+        if (!firstName.equals(that.firstName)) return false;
+        if (!lastName.equals(that.lastName)) return false;
+        if (!email.equals(that.email)) return false;
+        if (!password.equals(that.password)) return false;
+        if (!departmentId.equals(that.departmentId)) return false;
+        if (!jobTitleId.equals(that.jobTitleId)) return false;
+        return role == that.role;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = firstName.hashCode();
+        result = 31 * result + lastName.hashCode();
+        result = 31 * result + email.hashCode();
+        result = 31 * result + password.hashCode();
+        result = 31 * result + departmentId.hashCode();
+        result = 31 * result + jobTitleId.hashCode();
+        result = 31 * result + role.hashCode();
+        return result;
+    }
+
+    // toString
+    @Override
+    public String toString() {
+        return "RegisterRequest{" +
+                "firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", password='[PROTECTED]'" +
+                ", departmentId=" + departmentId +
+                ", jobTitleId=" + jobTitleId +
+                ", role=" + role +
+                '}';
+    }
 }
