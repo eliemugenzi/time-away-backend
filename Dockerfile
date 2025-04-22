@@ -1,4 +1,4 @@
-FROM openjdk:17-slim as build
+FROM openjdk:17-slim AS build
 WORKDIR /workspace/app
 
 COPY mvnw .
@@ -6,7 +6,8 @@ COPY .mvn .mvn
 COPY pom.xml .
 COPY src src
 
-RUN ./mvnw install -DskipTests
+RUN ./mvnw clean install -DskipTests
+RUN ./mvnw clean package -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
 FROM openjdk:17-slim
