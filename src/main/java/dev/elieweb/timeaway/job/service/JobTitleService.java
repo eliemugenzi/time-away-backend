@@ -8,12 +8,10 @@ import dev.elieweb.timeaway.job.dto.JobTitleDTO;
 import dev.elieweb.timeaway.job.entity.JobTitle;
 import dev.elieweb.timeaway.job.repository.JobTitleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +22,7 @@ public class JobTitleService {
     private final DepartmentRepository departmentRepository;
 
     @Transactional
-    public ApiResponse createJobTitle(JobTitleDTO jobTitleDTO) {
+    public ApiResponse<JobTitleDTO> createJobTitle(JobTitleDTO jobTitleDTO) {
         if (jobTitleRepository.existsByNameIgnoreCase(jobTitleDTO.getName())) {
             throw new IllegalArgumentException("Job title with name '" + jobTitleDTO.getName() + "' already exists");
         }
@@ -36,7 +34,6 @@ public class JobTitleService {
                 .name(jobTitleDTO.getName().trim())
                 .description(jobTitleDTO.getDescription().trim())
                 .department(department)
-                .deleted(false)
                 .build();
 
         try {
@@ -68,7 +65,7 @@ public class JobTitleService {
     }
 
     @Transactional
-    public ApiResponse updateJobTitle(UUID id, JobTitleDTO jobTitleDTO) {
+    public ApiResponse<JobTitleDTO> updateJobTitle(UUID id, JobTitleDTO jobTitleDTO) {
         JobTitle existingJobTitle = jobTitleRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Job title not found with id: " + id));
 
@@ -93,13 +90,13 @@ public class JobTitleService {
     }
 
     @Transactional
-    public ApiResponse deleteJobTitle(UUID id) {
+    public ApiResponse<Void> deleteJobTitle(UUID id) {
         JobTitle jobTitle = jobTitleRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Job title not found with id: " + id));
 
         jobTitle.setDeleted(true);
         jobTitleRepository.save(jobTitle);
-        return ApiResponse.success("Job title deleted successfully");
+        return ApiResponse.success("Job title deleted successfully", null);
     }
 
     public List<JobTitleDTO> getJobTitlesByDepartment(UUID departmentId) {

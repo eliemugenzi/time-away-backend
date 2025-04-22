@@ -1,6 +1,5 @@
 package dev.elieweb.timeaway.department.service;
 
-import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.department.dto.DepartmentDTO;
 import dev.elieweb.timeaway.department.dto.DepartmentResponseDTO;
 

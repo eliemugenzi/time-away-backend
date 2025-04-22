@@ -1,45 +1,88 @@
 package dev.elieweb.timeaway.common.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.http.HttpStatus;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    private String message;
     private int status;
+    private String message;
     private T data;
 
-    public static <T> ApiResponse<T> success(T data) {
-        return ApiResponse.<T>builder()
-                .status(HttpStatus.OK.value())
-                .data(data)
-                .build();
+    public ApiResponse() {}
+
+    public ApiResponse(int status, String message, T data) {
+        this.status = status;
+        this.message = message;
+        this.data = data;
     }
 
     public static <T> ApiResponse<T> success(String message, T data) {
-        return ApiResponse.<T>builder()
-                .status(HttpStatus.OK.value())
-                .message(message)
-                .data(data)
-                .build();
+        return new ApiResponse<>(200, message, data);
     }
 
     public static <T> ApiResponse<T> error(String message) {
-        return error(message, HttpStatus.BAD_REQUEST.value());
+        return new ApiResponse<>(400, message, null);
     }
 
     public static <T> ApiResponse<T> error(String message, int status) {
-        return ApiResponse.<T>builder()
-                .status(status)
-                .message(message)
-                .build();
+        return new ApiResponse<>(status, message, null);
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiResponse{" +
+                "status=" + status +
+                ", message='" + message + '\'' +
+                ", data=" + data +
+                '}';
+    }
+
+    public static class ApiResponseBuilder<T> {
+        private int status;
+        private String message;
+        private T data;
+
+        ApiResponseBuilder() {}
+
+        public ApiResponseBuilder<T> status(int status) {
+            this.status = status;
+            return this;
+        }
+
+        public ApiResponseBuilder<T> message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public ApiResponseBuilder<T> data(T data) {
+            this.data = data;
+            return this;
+        }
+
+        public ApiResponse<T> build() {
+            return new ApiResponse<>(status, message, data);
+        }
     }
 }

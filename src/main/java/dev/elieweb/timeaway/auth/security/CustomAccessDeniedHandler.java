@@ -24,7 +24,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        ApiResponse apiResponse = ApiResponse.error(
+        ApiResponse<Void> apiResponse = ApiResponse.error(
             "Access denied - " + accessDeniedException.getMessage(),
             HttpStatus.FORBIDDEN.value()
         );

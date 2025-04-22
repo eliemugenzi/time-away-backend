@@ -21,7 +21,7 @@ public class LeaveStatisticsController {
     private final LeaveStatisticsService leaveStatisticsService;
 
     @GetMapping("/overall")
-    public ResponseEntity<ApiResponse> getOverallStatistics() {
+    public ResponseEntity<ApiResponse<LeaveStatistics>> getOverallStatistics() {
         try {
             LeaveStatistics statistics = leaveStatisticsService.getOverallStatistics();
             return ResponseEntity.ok(ApiResponse.success("Overall leave statistics retrieved successfully", statistics));
@@ -31,7 +31,7 @@ public class LeaveStatisticsController {
     }
 
     @GetMapping("/departments")
-    public ResponseEntity<ApiResponse> getDepartmentStatistics() {
+    public ResponseEntity<ApiResponse<List<DepartmentStatistics>>> getDepartmentStatistics() {
         List<DepartmentStatistics> statistics = leaveStatisticsService.getDepartmentStatistics();
         return ResponseEntity.ok(ApiResponse.success("Department leave statistics retrieved successfully", statistics));
     }

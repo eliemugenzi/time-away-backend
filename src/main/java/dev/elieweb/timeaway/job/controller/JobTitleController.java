@@ -26,8 +26,8 @@ public class JobTitleController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new job title")
     public ResponseEntity<ApiResponse<JobTitleDTO>> createJobTitle(@Valid @RequestBody JobTitleDTO jobTitleDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(jobTitleService.createJobTitle(jobTitleDTO));
+        ApiResponse<JobTitleDTO> response = jobTitleService.createJobTitle(jobTitleDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
@@ -58,7 +58,8 @@ public class JobTitleController {
             @PathVariable UUID id,
             @Valid @RequestBody JobTitleDTO jobTitleDTO
     ) {
-        return ResponseEntity.ok(jobTitleService.updateJobTitle(id, jobTitleDTO));
+        return ResponseEntity.ok(ApiResponse.success("Job title updated successfully", 
+            jobTitleService.updateJobTitle(id, jobTitleDTO).getData()));
     }
 
     @DeleteMapping("/{id}")

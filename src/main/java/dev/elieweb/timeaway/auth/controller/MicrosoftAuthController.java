@@ -1,12 +1,10 @@
 package dev.elieweb.timeaway.auth.controller;
 
-import dev.elieweb.timeaway.auth.dto.AuthenticationResponse;
 import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.auth.enums.UserRole;
 import dev.elieweb.timeaway.auth.repository.UserRepository;
 import dev.elieweb.timeaway.auth.security.JwtService;
 import dev.elieweb.timeaway.auth.service.RefreshTokenService;
-import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.department.entity.Department;
 import dev.elieweb.timeaway.department.repository.DepartmentRepository;
 import dev.elieweb.timeaway.leave.service.LeaveBalanceService;
@@ -19,39 +17,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.http.ResponseEntity;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Collections;
-import java.util.HashMap;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
 import java.io.IOException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -68,18 +50,11 @@ public class MicrosoftAuthController {
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final LeaveBalanceService leaveBalanceService;
-    private final OAuth2AuthorizedClientService authorizedClientService;
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final RestTemplate restTemplate;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
-
-    private String convertToFormData(MultiValueMap<String, String> params) {
-        return params.entrySet().stream()
-            .map(entry -> entry.getKey() + "=" + URLEncoder.encode(entry.getValue().get(0), StandardCharsets.UTF_8))
-            .collect(Collectors.joining("&"));
-    }
 
     @Operation(summary = "Handle Microsoft OAuth2 callback")
     @ApiResponses(value = {
@@ -134,14 +109,14 @@ public class MicrosoftAuthController {
                     return;
                 }
 
-                Map<String, String> tokens = tokenResponse.getBody();
+                Map<String, Object> tokens = tokenResponse.getBody();
                 if (tokens == null || !tokens.containsKey("access_token")) {
                     log.error("Invalid token response - missing access token");
                     redirectWithError(response, "Invalid token response");
                     return;
                 }
 
-                String idToken = tokens.get("id_token");
+                String idToken = (String) tokens.get("id_token");
                 log.info("Successfully obtained tokens");
 
                 // Parse the ID token (it's a JWT) to get user info
@@ -193,14 +168,6 @@ public class MicrosoftAuthController {
                 String jwtToken = jwtService.generateToken(user);
                 var refreshToken = refreshTokenService.createRefreshToken(user);
                 
-                AuthenticationResponse authResponse = AuthenticationResponse.builder()
-                        .accessToken(jwtToken)
-                        .refreshToken(refreshToken.getToken())
-                        .firstName(user.getFirstName())
-                        .lastName(user.getLastName())
-                        .email(user.getEmail())
-                        .role(user.getRole())
-                        .build();
 
                 log.info("Authentication successful for user: {}", email);
                 
