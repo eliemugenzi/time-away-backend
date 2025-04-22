@@ -14,7 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,12 +38,12 @@ import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth/microsoft")
 @RequiredArgsConstructor
 @Tag(name = "Microsoft Authentication", description = "Microsoft Authentication APIs")
 public class MicrosoftAuthController {
+    private static final Logger log = LoggerFactory.getLogger(MicrosoftAuthController.class);
 
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
