@@ -53,6 +53,7 @@ public class LeaveRequestService {
 
         // Check for overlapping approved leave requests
         if (leaveRequestRepository.hasOverlappingApprovedLeaveRequest(currentUser, request.getStartDate(), request.getEndDate())) {
+            System.out.println("Overlapping approved leave request found");
             throw new BadRequestException("You already have an approved leave request that overlaps with these dates.");
         }
 
@@ -148,7 +149,7 @@ public class LeaveRequestService {
         if (currentUser.getRole() != UserRole.ROLE_ADMIN && 
             currentUser.getRole() != UserRole.ROLE_MANAGER && 
             currentUser.getRole() != UserRole.ROLE_HR) {
-            throw new RuntimeException("You don't have permission to view pending leave requests");
+            throw new BadRequestException("You don't have permission to view pending leave requests");
         }
         return leaveRequestRepository.findByStatusOrderByCreatedAtDesc(LeaveStatus.PENDING).stream()
                 .map(this::mapToResponseDTO)
@@ -157,11 +158,11 @@ public class LeaveRequestService {
 
     public LeaveRequestResponseDTO getLeaveRequest(UUID id) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Leave request not found"));
+                .orElseThrow(() -> new BadRequestException("Leave request not found"));
 
         User currentUser = currentUserService.getCurrentUser();
         if (!canAccessLeaveRequest(currentUser, leaveRequest)) {
-            throw new RuntimeException("You don't have permission to view this leave request");
+            throw new BadRequestException("You don't have permission to view this leave request");
         }
 
         return mapToResponseDTO(leaveRequest);

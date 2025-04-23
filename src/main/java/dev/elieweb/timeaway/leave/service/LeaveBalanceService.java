@@ -3,6 +3,7 @@ package dev.elieweb.timeaway.leave.service;
 import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.auth.enums.UserRole;
 import dev.elieweb.timeaway.auth.service.CurrentUserService;
+import dev.elieweb.timeaway.common.exception.BadRequestException;
 import dev.elieweb.timeaway.leave.dto.LeaveBalanceDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveBalanceInfo;
 import dev.elieweb.timeaway.leave.dto.LeaveBalanceResponseDTO;
@@ -53,11 +54,11 @@ public class LeaveBalanceService {
 
     public LeaveBalanceResponseDTO getLeaveBalance(Long id) {
         LeaveBalance leaveBalance = leaveBalanceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+                .orElseThrow(() -> new BadRequestException("Leave balance not found"));
 
         User currentUser = currentUserService.getCurrentUser();
         if (!canAccessLeaveBalance(currentUser, leaveBalance)) {
-            throw new RuntimeException("You don't have permission to view this leave balance");
+            throw new BadRequestException("You don't have permission to view this leave balance");
         }
 
         return mapToResponseDTO(leaveBalance);
@@ -68,7 +69,7 @@ public class LeaveBalanceService {
         User currentUser = currentUserService.getCurrentUser();
         if (currentUser.getRole() != UserRole.ROLE_ADMIN && 
             currentUser.getRole() != UserRole.ROLE_HR) {
-            throw new RuntimeException("Only admins and HR can create leave balances");
+            throw new BadRequestException("Only administrators and HR personnel can create leave balances");
         }
 
         LeaveBalance leaveBalance = LeaveBalance.builder()
@@ -88,11 +89,17 @@ public class LeaveBalanceService {
     public void updateLeaveBalance(LeaveRequest leaveRequest) {
         LeaveBalance leaveBalance = leaveBalanceRepository
                 .findByUserAndTypeAndYear(leaveRequest.getUser(), leaveRequest.getType(), LocalDate.now().getYear())
-                .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+                .orElseThrow(() -> new BadRequestException("Leave balance not found for the specified leave type"));
 
         long daysRequested = calculateWorkingDays(leaveRequest.getStartDate(), leaveRequest.getEndDate());
         if (leaveBalance.getRemainingDays() < daysRequested) {
-            throw new RuntimeException("Insufficient leave balance");
+            throw new BadRequestException(String.format(
+                "Insufficient leave balance. You requested %d days but only have %d %s days remaining for %d.",
+                daysRequested,
+                leaveBalance.getRemainingDays(),
+                leaveRequest.getType().toString().toLowerCase(),
+                leaveBalance.getYear()
+            ));
         }
 
         leaveBalance.setUsedDays(leaveBalance.getUsedDays() + (int) daysRequested);
@@ -103,11 +110,17 @@ public class LeaveBalanceService {
     public void checkLeaveBalance(User user, LeaveType type, LocalDate startDate, LocalDate endDate) {
         LeaveBalance leaveBalance = leaveBalanceRepository
                 .findByUserAndTypeAndYear(user, type, LocalDate.now().getYear())
-                .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+                .orElseThrow(() -> new BadRequestException("Leave balance not found for the specified leave type"));
 
         long daysRequested = calculateWorkingDays(startDate, endDate);
         if (leaveBalance.getRemainingDays() < daysRequested) {
-            throw new RuntimeException("Insufficient leave balance");
+            throw new BadRequestException(String.format(
+                "Insufficient leave balance. You requested %d days but only have %d %s days remaining for %d.",
+                daysRequested,
+                leaveBalance.getRemainingDays(),
+                type.toString().toLowerCase(),
+                leaveBalance.getYear()
+            ));
         }
     }
 
@@ -256,6 +269,10 @@ public class LeaveBalanceService {
     public LeaveBalance getLeaveBalance(User user, LeaveType type, int year) {
         return leaveBalanceRepository
                 .findByUserAndTypeAndYear(user, type, year)
-                .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+                .orElseThrow(() -> new BadRequestException(
+                    String.format("Leave balance not found for %s leave type in year %d", 
+                        type.toString().toLowerCase(), 
+                        year)
+                ));
     }
 } 
