@@ -158,7 +158,7 @@ public class MicrosoftAuthController {
                                     .firstName(firstName)
                                     .lastName(lastName)
                                     .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                                    .role(hrDepartment != null ? UserRole.ROLE_HR : UserRole.ROLE_USER)
+                                    .role(UserRole.ROLE_USER)
                                     .joiningDate(LocalDateTime.now())
                                     .department(hrDepartment)
                                     .build();
