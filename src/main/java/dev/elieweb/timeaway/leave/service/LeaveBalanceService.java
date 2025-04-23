@@ -245,9 +245,7 @@ public class LeaveBalanceService {
             case ANNUAL -> 20;
             case SICK -> 10;
             case MATERNITY -> 90;
-            case PATERNITY -> 14;
-            case BEREAVEMENT -> 5;
-            case UNPAID -> 0;
+            case COMPASSIONATE -> 5;
         };
     }
 

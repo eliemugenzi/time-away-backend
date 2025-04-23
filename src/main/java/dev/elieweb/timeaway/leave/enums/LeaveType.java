@@ -4,7 +4,5 @@ public enum LeaveType {
     ANNUAL,
     SICK,
     MATERNITY,
-    PATERNITY,
-    BEREAVEMENT,
-    UNPAID
+    COMPASSIONATE
 } 
