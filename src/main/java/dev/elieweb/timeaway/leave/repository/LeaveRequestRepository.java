@@ -87,4 +87,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
            "OR (:startDate BETWEEN l.startDate AND l.endDate) " +
            "OR (:endDate BETWEEN l.startDate AND l.endDate))")
     boolean hasOverlappingApprovedLeaveRequest(User user, LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT l FROM LeaveRequest l WHERE l.status = :status AND l.startDate BETWEEN :startDate AND :endDate")
+    List<LeaveRequest> findByStatusAndStartDateBetween(LeaveStatus status, LocalDate startDate, LocalDate endDate);
 } 

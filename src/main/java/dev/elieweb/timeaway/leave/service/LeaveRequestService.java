@@ -8,9 +8,11 @@ import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
 import dev.elieweb.timeaway.leave.dto.PaginatedLeaveRequestResponse;
+import dev.elieweb.timeaway.leave.dto.MonthlyLeaveStatisticsDTO;
 import dev.elieweb.timeaway.leave.entity.LeaveBalance;
 import dev.elieweb.timeaway.leave.entity.LeaveRequest;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
+import dev.elieweb.timeaway.leave.enums.LeaveType;
 import dev.elieweb.timeaway.leave.repository.LeaveRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -298,5 +303,56 @@ public class LeaveRequestService {
                 .totalPages(page.getTotalPages())
                 .last(page.isLast())
                 .build();
+    }
+
+    public List<MonthlyLeaveStatisticsDTO> getMonthlyApprovedLeaves(int year) {
+        List<LeaveRequest> approvedLeaves = leaveRequestRepository.findByStatusAndStartDateBetween(
+            LeaveStatus.APPROVED,
+            LocalDate.of(year, 1, 1),
+            LocalDate.of(year, 12, 31)
+        );
+
+        Map<Integer, MonthlyLeaveStatisticsDTO> monthlyStats = new HashMap<>();
+        
+        // Initialize all months with zero values
+        for (int month = 1; month <= 12; month++) {
+            LocalDate date = LocalDate.of(year, month, 1);
+            Map<LeaveType, MonthlyLeaveStatisticsDTO.LeaveTypeStats> leaveTypeStats = new HashMap<>();
+            
+            // Initialize stats for all leave types
+            for (LeaveType type : LeaveType.values()) {
+                leaveTypeStats.put(type, new MonthlyLeaveStatisticsDTO.LeaveTypeStats());
+            }
+            
+            monthlyStats.put(month, MonthlyLeaveStatisticsDTO.builder()
+                .year(year)
+                .month(month)
+                .monthName(date.getMonth().toString())
+                .approvedLeaveCount(0)
+                .totalLeaveDays(0.0)
+                .leaveTypeStatistics(leaveTypeStats)
+                .build());
+        }
+
+        // Update months that have approved leaves
+        approvedLeaves.forEach(leave -> {
+            int month = leave.getStartDate().getMonthValue();
+            MonthlyLeaveStatisticsDTO monthStats = monthlyStats.get(month);
+            double duration = leave.getDuration();
+            
+            // Update overall statistics
+            monthStats.setApprovedLeaveCount(monthStats.getApprovedLeaveCount() + 1);
+            monthStats.setTotalLeaveDays(monthStats.getTotalLeaveDays() + duration);
+            
+            // Update leave type specific statistics
+            MonthlyLeaveStatisticsDTO.LeaveTypeStats typeStats = monthStats.getLeaveTypeStatistics().get(leave.getType());
+            typeStats.incrementCount();
+            typeStats.addDays(duration);
+        });
+
+        // Return sorted list by month
+        return monthlyStats.values().stream()
+            .sorted(Comparator.comparingInt(MonthlyLeaveStatisticsDTO::getMonth))
+            .collect(Collectors.toList());
     }
 } 

@@ -4,6 +4,7 @@ import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
+import dev.elieweb.timeaway.leave.dto.MonthlyLeaveStatisticsDTO;
 import dev.elieweb.timeaway.leave.dto.PaginatedLeaveRequestResponse;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
 import dev.elieweb.timeaway.leave.service.LeaveRequestService;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -98,5 +100,15 @@ public class LeaveRequestController {
     public ResponseEntity<ApiResponse<Void>> deleteLeaveRequest(@PathVariable UUID id) {
         leaveRequestService.deleteLeaveRequest(id);
         return ResponseEntity.ok(ApiResponse.success("Leave request deleted successfully", null));
+    }
+
+    @GetMapping("/monthly-statistics/{year}")
+    @Operation(summary = "Get monthly approved leave statistics for a specific year")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    public ResponseEntity<ApiResponse<List<MonthlyLeaveStatisticsDTO>>> getMonthlyApprovedLeaves(
+            @Parameter(description = "Year to get statistics for", example = "2024")
+            @PathVariable int year) {
+        List<MonthlyLeaveStatisticsDTO> statistics = leaveRequestService.getMonthlyApprovedLeaves(year);
+        return ResponseEntity.ok(ApiResponse.success("Monthly leave statistics retrieved successfully", statistics));
     }
 } 

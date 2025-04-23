@@ -7,6 +7,7 @@ import dev.elieweb.timeaway.leave.enums.LeaveType;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 @Entity
@@ -124,6 +125,13 @@ public class LeaveRequest extends BaseEntity {
 
     public LeaveType getLeaveType() {
         return type;
+    }
+
+    public double getDuration() {
+        if (startDate == null || endDate == null) {
+            return 0.0;
+        }
+        return ChronoUnit.DAYS.between(startDate, endDate.plusDays(1));
     }
 
     @Override
