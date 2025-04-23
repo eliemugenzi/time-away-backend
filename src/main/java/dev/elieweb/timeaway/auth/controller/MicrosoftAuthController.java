@@ -132,11 +132,12 @@ public class MicrosoftAuthController {
                 String payload = new String(java.util.Base64.getUrlDecoder().decode(idTokenParts[1]));
                 Map<String, Object> idTokenClaims = gson.fromJson(payload, Map.class);
 
-                log.info("ID token claims: {}", gson.toJson(idTokenClaims));
-
                 String email = (String) idTokenClaims.get("email");
-                String firstName = (String) idTokenClaims.get("given_name");
-                String lastName = (String) idTokenClaims.get("family_name");
+                
+                // Get user's name from claims
+                final String[] names = extractNames(idTokenClaims);
+                final String firstName = names[0];
+                final String lastName = names[1];
 
                 if (email == null || email.isEmpty()) {
                     log.error("No email found in ID token claims");
@@ -225,5 +226,29 @@ public class MicrosoftAuthController {
         log.error("OAuth2 authentication error: {}", error);
         String errorMessage = error != null ? error : "Authentication failed";
         redirectWithError(response, errorMessage);
+    }
+
+    private String[] extractNames(Map<String, Object> idTokenClaims) {
+        String firstName = (String) idTokenClaims.get("given_name");
+        String lastName = (String) idTokenClaims.get("family_name");
+
+        // If given_name and family_name are not available, try to use name
+        if ((firstName == null || lastName == null) && idTokenClaims.containsKey("name")) {
+            String fullName = (String) idTokenClaims.get("name");
+            String[] nameParts = fullName.split(" ", 2);
+            firstName = nameParts[0];
+            lastName = nameParts.length > 1 ? nameParts[1] : "";
+            log.info("Using name field for first and last name: {} {}", firstName, lastName);
+        }
+
+        // If we still don't have valid names, use defaults
+        if (firstName == null || firstName.trim().isEmpty()) {
+            firstName = "---";
+        }
+        if (lastName == null || lastName.trim().isEmpty()) {
+            lastName = "---";
+        }
+
+        return new String[]{firstName, lastName};
     }
 } 
