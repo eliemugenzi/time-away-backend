@@ -79,4 +79,12 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
     Double calculateAverageLeaveDurationForDepartment(String department);
 
     boolean existsByUserAndStatus(User user, LeaveStatus status);
+
+    @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM LeaveRequest l " +
+           "WHERE l.user = :user AND l.status = 'APPROVED' " +
+           "AND ((l.startDate BETWEEN :startDate AND :endDate) " +
+           "OR (l.endDate BETWEEN :startDate AND :endDate) " +
+           "OR (:startDate BETWEEN l.startDate AND l.endDate) " +
+           "OR (:endDate BETWEEN l.startDate AND l.endDate))")
+    boolean hasOverlappingApprovedLeaveRequest(User user, LocalDate startDate, LocalDate endDate);
 } 

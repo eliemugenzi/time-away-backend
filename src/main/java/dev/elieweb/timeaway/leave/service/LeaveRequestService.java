@@ -51,6 +51,11 @@ public class LeaveRequestService {
             throw new BadRequestException("You already have a pending leave request. Please wait for it to be processed before submitting a new one.");
         }
 
+        // Check for overlapping approved leave requests
+        if (leaveRequestRepository.hasOverlappingApprovedLeaveRequest(currentUser, request.getStartDate(), request.getEndDate())) {
+            throw new BadRequestException("You already have an approved leave request that overlaps with these dates.");
+        }
+
         // Validate leave balance
         LeaveBalance balance = leaveBalanceService.getLeaveBalance(currentUser, request.getType(), LocalDate.now().getYear());
         if (balance == null) {
