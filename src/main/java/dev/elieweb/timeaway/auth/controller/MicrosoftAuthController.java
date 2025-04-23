@@ -44,6 +44,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Tag(name = "Microsoft Authentication", description = "Microsoft Authentication APIs")
 public class MicrosoftAuthController {
     private static final Logger log = LoggerFactory.getLogger(MicrosoftAuthController.class);
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
@@ -75,7 +76,6 @@ public class MicrosoftAuthController {
         try {
             // Get the Microsoft OAuth2 client registration
             ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId("azure-ad");
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
             
             if (clientRegistration == null) {
                 redirectWithError(response, "Authentication failed: no client registration found");
@@ -131,6 +131,8 @@ public class MicrosoftAuthController {
                 // Decode the payload (second part of the JWT)
                 String payload = new String(java.util.Base64.getUrlDecoder().decode(idTokenParts[1]));
                 Map<String, Object> idTokenClaims = gson.fromJson(payload, Map.class);
+
+                log.info("ID token claims: {}", gson.toJson(idTokenClaims));
 
                 String email = (String) idTokenClaims.get("email");
                 String firstName = (String) idTokenClaims.get("given_name");
