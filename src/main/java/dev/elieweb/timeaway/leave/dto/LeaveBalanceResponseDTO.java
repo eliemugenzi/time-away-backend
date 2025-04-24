@@ -1,10 +1,16 @@
 package dev.elieweb.timeaway.leave.dto;
 
 import dev.elieweb.timeaway.leave.enums.LeaveType;
+import lombok.Builder;
+import lombok.Data;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Data
+@Builder
 public class LeaveBalanceResponseDTO {
     private UUID id;
     private UUID userId;
@@ -14,6 +20,9 @@ public class LeaveBalanceResponseDTO {
     private Integer totalDays;
     private Integer usedDays;
     private Integer remainingDays;
+    private BigDecimal monthlyAccrualRate;
+    private Integer carriedForwardDays;
+    private LocalDate lastAccrualDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -24,8 +33,9 @@ public class LeaveBalanceResponseDTO {
     // All-args constructor
     public LeaveBalanceResponseDTO(UUID id, UUID userId, String userName, LeaveType type,
                                  Integer year, Integer totalDays, Integer usedDays,
-                                 Integer remainingDays, LocalDateTime createdAt,
-                                 LocalDateTime updatedAt) {
+                                 Integer remainingDays, BigDecimal monthlyAccrualRate,
+                                 Integer carriedForwardDays, LocalDate lastAccrualDate,
+                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.userName = userName;
@@ -34,6 +44,9 @@ public class LeaveBalanceResponseDTO {
         this.totalDays = totalDays;
         this.usedDays = usedDays;
         this.remainingDays = remainingDays;
+        this.monthlyAccrualRate = monthlyAccrualRate;
+        this.carriedForwardDays = carriedForwardDays;
+        this.lastAccrualDate = lastAccrualDate;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -103,6 +116,30 @@ public class LeaveBalanceResponseDTO {
         this.remainingDays = remainingDays;
     }
 
+    public BigDecimal getMonthlyAccrualRate() {
+        return monthlyAccrualRate;
+    }
+
+    public void setMonthlyAccrualRate(BigDecimal monthlyAccrualRate) {
+        this.monthlyAccrualRate = monthlyAccrualRate;
+    }
+
+    public Integer getCarriedForwardDays() {
+        return carriedForwardDays;
+    }
+
+    public void setCarriedForwardDays(Integer carriedForwardDays) {
+        this.carriedForwardDays = carriedForwardDays;
+    }
+
+    public LocalDate getLastAccrualDate() {
+        return lastAccrualDate;
+    }
+
+    public void setLastAccrualDate(LocalDate lastAccrualDate) {
+        this.lastAccrualDate = lastAccrualDate;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -133,6 +170,9 @@ public class LeaveBalanceResponseDTO {
         private Integer totalDays;
         private Integer usedDays;
         private Integer remainingDays;
+        private BigDecimal monthlyAccrualRate;
+        private Integer carriedForwardDays;
+        private LocalDate lastAccrualDate;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -179,6 +219,21 @@ public class LeaveBalanceResponseDTO {
             return this;
         }
 
+        public LeaveBalanceResponseDTOBuilder monthlyAccrualRate(BigDecimal monthlyAccrualRate) {
+            this.monthlyAccrualRate = monthlyAccrualRate;
+            return this;
+        }
+
+        public LeaveBalanceResponseDTOBuilder carriedForwardDays(Integer carriedForwardDays) {
+            this.carriedForwardDays = carriedForwardDays;
+            return this;
+        }
+
+        public LeaveBalanceResponseDTOBuilder lastAccrualDate(LocalDate lastAccrualDate) {
+            this.lastAccrualDate = lastAccrualDate;
+            return this;
+        }
+
         public LeaveBalanceResponseDTOBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -192,7 +247,8 @@ public class LeaveBalanceResponseDTO {
         public LeaveBalanceResponseDTO build() {
             return new LeaveBalanceResponseDTO(id, userId, userName, type, year,
                                              totalDays, usedDays, remainingDays,
-                                             createdAt, updatedAt);
+                                             monthlyAccrualRate, carriedForwardDays,
+                                             lastAccrualDate, createdAt, updatedAt);
         }
     }
 
@@ -213,6 +269,12 @@ public class LeaveBalanceResponseDTO {
         if (usedDays != null ? !usedDays.equals(that.usedDays) : that.usedDays != null) return false;
         if (remainingDays != null ? !remainingDays.equals(that.remainingDays) : that.remainingDays != null)
             return false;
+        if (monthlyAccrualRate != null ? !monthlyAccrualRate.equals(that.monthlyAccrualRate) : that.monthlyAccrualRate != null)
+            return false;
+        if (carriedForwardDays != null ? !carriedForwardDays.equals(that.carriedForwardDays) : that.carriedForwardDays != null)
+            return false;
+        if (lastAccrualDate != null ? !lastAccrualDate.equals(that.lastAccrualDate) : that.lastAccrualDate != null)
+            return false;
         if (createdAt != null ? !createdAt.equals(that.createdAt) : that.createdAt != null) return false;
         return updatedAt != null ? updatedAt.equals(that.updatedAt) : that.updatedAt == null;
     }
@@ -227,6 +289,9 @@ public class LeaveBalanceResponseDTO {
         result = 31 * result + (totalDays != null ? totalDays.hashCode() : 0);
         result = 31 * result + (usedDays != null ? usedDays.hashCode() : 0);
         result = 31 * result + (remainingDays != null ? remainingDays.hashCode() : 0);
+        result = 31 * result + (monthlyAccrualRate != null ? monthlyAccrualRate.hashCode() : 0);
+        result = 31 * result + (carriedForwardDays != null ? carriedForwardDays.hashCode() : 0);
+        result = 31 * result + (lastAccrualDate != null ? lastAccrualDate.hashCode() : 0);
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
         result = 31 * result + (updatedAt != null ? updatedAt.hashCode() : 0);
         return result;
@@ -244,6 +309,9 @@ public class LeaveBalanceResponseDTO {
                 ", totalDays=" + totalDays +
                 ", usedDays=" + usedDays +
                 ", remainingDays=" + remainingDays +
+                ", monthlyAccrualRate=" + monthlyAccrualRate +
+                ", carriedForwardDays=" + carriedForwardDays +
+                ", lastAccrualDate=" + lastAccrualDate +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

@@ -18,6 +18,10 @@ spring:
     baseline-version: 0
     clean-on-validation-error: true
     clean-disabled: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   security:
     oauth2:
       client:
@@ -67,6 +71,14 @@ app:
       - application/vnd.openxmlformats-officedocument.wordprocessingml.document
       - image/jpeg
       - image/jpg
+      - image/png
+  file-upload:
+    max-file-size: 5242880  # 5MB in bytes
+    allowed-content-types:
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - image/jpeg
       - image/png
 
 azure:

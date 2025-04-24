@@ -4,6 +4,8 @@ import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.common.entity.BaseEntity;
 import dev.elieweb.timeaway.leave.enums.LeaveType;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -29,16 +31,29 @@ public class LeaveBalance extends BaseEntity {
     @Column(nullable = false)
     private Integer remainingDays;
 
+    @Column(name = "monthly_accrual_rate", precision = 5, scale = 2)
+    private BigDecimal monthlyAccrualRate;
+
+    @Column(name = "carried_forward_days")
+    private Integer carriedForwardDays;
+
+    @Column(name = "last_accrual_date")
+    private LocalDate lastAccrualDate;
+
     public LeaveBalance() {}
 
     public LeaveBalance(User user, LeaveType type, Integer year, Integer totalDays, 
-                       Integer usedDays, Integer remainingDays) {
+                       Integer usedDays, Integer remainingDays, BigDecimal monthlyAccrualRate,
+                       Integer carriedForwardDays, LocalDate lastAccrualDate) {
         this.user = user;
         this.type = type;
         this.year = year;
         this.totalDays = totalDays;
         this.usedDays = usedDays;
         this.remainingDays = remainingDays;
+        this.monthlyAccrualRate = monthlyAccrualRate;
+        this.carriedForwardDays = carriedForwardDays;
+        this.lastAccrualDate = lastAccrualDate;
     }
 
     public static LeaveBalanceBuilder builder() {
@@ -93,6 +108,30 @@ public class LeaveBalance extends BaseEntity {
         this.remainingDays = remainingDays;
     }
 
+    public BigDecimal getMonthlyAccrualRate() {
+        return monthlyAccrualRate;
+    }
+
+    public void setMonthlyAccrualRate(BigDecimal monthlyAccrualRate) {
+        this.monthlyAccrualRate = monthlyAccrualRate;
+    }
+
+    public Integer getCarriedForwardDays() {
+        return carriedForwardDays;
+    }
+
+    public void setCarriedForwardDays(Integer carriedForwardDays) {
+        this.carriedForwardDays = carriedForwardDays;
+    }
+
+    public LocalDate getLastAccrualDate() {
+        return lastAccrualDate;
+    }
+
+    public void setLastAccrualDate(LocalDate lastAccrualDate) {
+        this.lastAccrualDate = lastAccrualDate;
+    }
+
     @Override
     public String toString() {
         return "LeaveBalance{" +
@@ -103,6 +142,9 @@ public class LeaveBalance extends BaseEntity {
                 ", totalDays=" + totalDays +
                 ", usedDays=" + usedDays +
                 ", remainingDays=" + remainingDays +
+                ", monthlyAccrualRate=" + monthlyAccrualRate +
+                ", carriedForwardDays=" + carriedForwardDays +
+                ", lastAccrualDate=" + lastAccrualDate +
                 '}';
     }
 
@@ -128,6 +170,9 @@ public class LeaveBalance extends BaseEntity {
         private Integer totalDays;
         private Integer usedDays;
         private Integer remainingDays;
+        private BigDecimal monthlyAccrualRate;
+        private Integer carriedForwardDays;
+        private LocalDate lastAccrualDate;
 
         LeaveBalanceBuilder() {}
 
@@ -161,8 +206,24 @@ public class LeaveBalance extends BaseEntity {
             return this;
         }
 
+        public LeaveBalanceBuilder monthlyAccrualRate(BigDecimal monthlyAccrualRate) {
+            this.monthlyAccrualRate = monthlyAccrualRate;
+            return this;
+        }
+
+        public LeaveBalanceBuilder carriedForwardDays(Integer carriedForwardDays) {
+            this.carriedForwardDays = carriedForwardDays;
+            return this;
+        }
+
+        public LeaveBalanceBuilder lastAccrualDate(LocalDate lastAccrualDate) {
+            this.lastAccrualDate = lastAccrualDate;
+            return this;
+        }
+
         public LeaveBalance build() {
-            return new LeaveBalance(user, type, year, totalDays, usedDays, remainingDays);
+            return new LeaveBalance(user, type, year, totalDays, usedDays, remainingDays,
+                                  monthlyAccrualRate, carriedForwardDays, lastAccrualDate);
         }
     }
 } 

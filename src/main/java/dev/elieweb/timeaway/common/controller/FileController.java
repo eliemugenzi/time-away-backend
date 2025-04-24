@@ -1,65 +1,63 @@
 package dev.elieweb.timeaway.common.controller;
 
+import dev.elieweb.timeaway.common.config.FileStorageConfig;
+import dev.elieweb.timeaway.common.exception.ResourceNotFoundException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Value;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/files")
+@RequiredArgsConstructor
+@Tag(name = "Files", description = "File Access APIs")
 public class FileController {
-
-    private final Path fileStorageLocation;
-
-    public FileController(@Value("${app.file-storage.location}") String uploadDir) {
-        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
-    }
+    private final FileStorageConfig fileStorageConfig;
+    
+    private static final Map<String, String> CONTENT_TYPES = Map.of(
+        "pdf", "application/pdf",
+        "doc", "application/msword",
+        "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "jpg", "image/jpeg",
+        "jpeg", "image/jpeg",
+        "png", "image/png"
+    );
 
     @GetMapping("/{fileName:.+}")
+    @Operation(summary = "Get file by name")
     public ResponseEntity<Resource> getFile(@PathVariable String fileName) {
         try {
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Path filePath = Paths.get(fileStorageConfig.getUploadDir()).resolve(fileName).normalize();
             Resource resource = new UrlResource(filePath.toUri());
-            
-            if (resource.exists()) {
-                String contentType = determineContentType(fileName);
-                
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
+
+            if (!resource.exists()) {
+                throw new ResourceNotFoundException("File not found: " + fileName);
             }
-        } catch (MalformedURLException e) {
-            return ResponseEntity.badRequest().build();
+
+            String contentType = determineContentType(fileName);
+            
+            return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                .body(resource);
+
+        } catch (MalformedURLException ex) {
+            throw new ResourceNotFoundException("File not found: " + fileName);
         }
     }
 
     private String determineContentType(String fileName) {
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-        switch (extension) {
-            case "pdf":
-                return "application/pdf";
-            case "doc":
-                return "application/msword";
-            case "docx":
-                return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            case "jpg":
-            case "jpeg":
-                return "image/jpeg";
-            case "png":
-                return "image/png";
-            default:
-                return "application/octet-stream";
-        }
+        return CONTENT_TYPES.getOrDefault(extension, "application/octet-stream");
     }
 } 

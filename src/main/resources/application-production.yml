@@ -20,6 +20,10 @@ spring:
     baseline-version: 0
     clean-on-validation-error: false
     clean-disabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   security:
     oauth2:
       client:
@@ -66,18 +70,27 @@ jwt:
 app:
   frontend:
     url: ${APP_FRONTEND_URL:https://timeaway.com}
+  api:
+    url: ${APP_API_URL:https://api.timeaway.com}
   jwt:
     refresh-token:
       expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 24 hours default
   file-storage:
-    location: ${FILE_STORAGE_LOCATION:/var/timeaway/uploads}
-    max-file-size: 10MB
+    location: ${FILE_STORAGE_LOCATION:/app/uploads}
+    max-file-size: 5MB
     allowed-content-types:
       - application/pdf
       - application/msword
       - application/vnd.openxmlformats-officedocument.wordprocessingml.document
       - image/jpeg
-      - image/jpg
+      - image/png
+  file-upload:
+    max-file-size: 5242880  # 5MB in bytes
+    allowed-content-types:
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - image/jpeg
       - image/png
 
 azure:

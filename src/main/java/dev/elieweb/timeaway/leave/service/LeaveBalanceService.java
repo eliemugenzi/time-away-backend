@@ -17,7 +17,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,6 +29,9 @@ import java.util.stream.Collectors;
 public class LeaveBalanceService {
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final CurrentUserService currentUserService;
+
+    private static final int MAX_CARRY_FORWARD_DAYS = 5;
+    private static final BigDecimal DEFAULT_MONTHLY_ACCRUAL_RATE = new BigDecimal("1.66");
 
     public List<LeaveBalanceResponseDTO> getAllLeaveBalances() {
         User currentUser = currentUserService.getCurrentUser();
@@ -79,6 +84,10 @@ public class LeaveBalanceService {
                 .totalDays(request.getTotalDays())
                 .usedDays(0)
                 .remainingDays(request.getTotalDays())
+                .monthlyAccrualRate(request.getType() == LeaveType.ANNUAL ? 
+                    DEFAULT_MONTHLY_ACCRUAL_RATE : BigDecimal.ZERO)
+                .carriedForwardDays(0)
+                .lastAccrualDate(LocalDate.now())
                 .build();
 
         leaveBalance = leaveBalanceRepository.save(leaveBalance);
@@ -150,6 +159,9 @@ public class LeaveBalanceService {
                     .totalDays(21)
                     .usedDays(0)
                     .remainingDays(21)
+                    .monthlyAccrualRate(DEFAULT_MONTHLY_ACCRUAL_RATE)
+                    .carriedForwardDays(0)
+                    .lastAccrualDate(LocalDate.now())
                     .build();
             leaveBalanceRepository.save(annualLeave);
         }
@@ -163,6 +175,9 @@ public class LeaveBalanceService {
                     .totalDays(10)
                     .usedDays(0)
                     .remainingDays(10)
+                    .monthlyAccrualRate(BigDecimal.ZERO)
+                    .carriedForwardDays(0)
+                    .lastAccrualDate(LocalDate.now())
                     .build();
             leaveBalanceRepository.save(sickLeave);
         }
@@ -176,6 +191,9 @@ public class LeaveBalanceService {
                     .totalDays(90)
                     .usedDays(0)
                     .remainingDays(90)
+                    .monthlyAccrualRate(BigDecimal.ZERO)
+                    .carriedForwardDays(0)
+                    .lastAccrualDate(LocalDate.now())
                     .build();
             leaveBalanceRepository.save(maternityLeave);
         }
@@ -198,9 +216,86 @@ public class LeaveBalanceService {
                 .totalDays(leaveBalance.getTotalDays())
                 .usedDays(leaveBalance.getUsedDays())
                 .remainingDays(leaveBalance.getRemainingDays())
+                .monthlyAccrualRate(leaveBalance.getMonthlyAccrualRate())
+                .carriedForwardDays(leaveBalance.getCarriedForwardDays())
+                .lastAccrualDate(leaveBalance.getLastAccrualDate())
                 .createdAt(leaveBalance.getCreatedAt())
                 .updatedAt(leaveBalance.getUpdatedAt())
                 .build();
+    }
+
+    @Scheduled(cron = "0 0 0 1 * *") // Run at midnight on the first day of every month
+    @Transactional
+    public void processMonthlyAccrual() {
+        LocalDate today = LocalDate.now();
+        List<LeaveBalance> annualLeaveBalances = leaveBalanceRepository.findAll().stream()
+                .filter(balance -> balance.getType() == LeaveType.ANNUAL)
+                .collect(Collectors.toList());
+
+        for (LeaveBalance balance : annualLeaveBalances) {
+            if (balance.getLastAccrualDate() == null) {
+                balance.setLastAccrualDate(today);
+                continue;
+            }
+
+            // Calculate months since last accrual
+            long monthsSinceLastAccrual = ChronoUnit.MONTHS.between(
+                balance.getLastAccrualDate(),
+                today
+            );
+
+            if (monthsSinceLastAccrual > 0) {
+                // Calculate accrual amount
+                BigDecimal accrualAmount = balance.getMonthlyAccrualRate()
+                    .multiply(new BigDecimal(monthsSinceLastAccrual));
+                
+                // Update balance
+                balance.setTotalDays(balance.getTotalDays() + accrualAmount.intValue());
+                balance.setRemainingDays(balance.getRemainingDays() + accrualAmount.intValue());
+                balance.setLastAccrualDate(today);
+                
+                leaveBalanceRepository.save(balance);
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 1 1 *") // Run at midnight on January 1st
+    @Transactional
+    public void processYearEndCarryForward() {
+        int oldYear = LocalDate.now().minusYears(1).getYear();
+        int newYear = LocalDate.now().getYear();
+        
+        List<User> allUsers = currentUserService.findAllUsers(Sort.by(Sort.Direction.DESC, "createdAt"));
+        
+        for (User user : allUsers) {
+            // Process annual leave type only
+            LeaveBalance oldBalance = leaveBalanceRepository
+                .findByUserAndTypeAndYear(user, LeaveType.ANNUAL, oldYear)
+                .orElse(null);
+
+            if (oldBalance != null) {
+                // Calculate days to carry forward (max 5)
+                int daysToCarryForward = Math.min(
+                    oldBalance.getRemainingDays(),
+                    MAX_CARRY_FORWARD_DAYS
+                );
+
+                // Create new year's balance
+                LeaveBalance newBalance = LeaveBalance.builder()
+                    .user(user)
+                    .type(LeaveType.ANNUAL)
+                    .year(newYear)
+                    .totalDays(getDefaultDays(LeaveType.ANNUAL) + daysToCarryForward)
+                    .usedDays(0)
+                    .remainingDays(getDefaultDays(LeaveType.ANNUAL) + daysToCarryForward)
+                    .monthlyAccrualRate(DEFAULT_MONTHLY_ACCRUAL_RATE)
+                    .carriedForwardDays(daysToCarryForward)
+                    .lastAccrualDate(LocalDate.now())
+                    .build();
+
+                leaveBalanceRepository.save(newBalance);
+            }
+        }
     }
 
     @Scheduled(cron = "0 0 0 1 1 *") // Run at midnight on January 1st
