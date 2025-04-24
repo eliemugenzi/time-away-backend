@@ -297,6 +297,7 @@ public class LeaveRequestService {
         return LeaveRequestResponseDTO.builder()
                 .id(leaveRequest.getId())
                 .employeeName(leaveRequest.getUser().getFirstName() + " " + leaveRequest.getUser().getLastName())
+                .departmentId(leaveRequest.getDepartment().getId())
                 .type(leaveRequest.getType())
                 .startDate(leaveRequest.getStartDate())
                 .endDate(leaveRequest.getEndDate())

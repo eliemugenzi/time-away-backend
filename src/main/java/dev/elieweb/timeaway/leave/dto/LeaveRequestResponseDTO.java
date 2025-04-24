@@ -12,6 +12,7 @@ public class LeaveRequestResponseDTO {
     @Schema(hidden = true)
     private UUID id;
     private String employeeName;
+    private UUID departmentId;
     private LeaveType type;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -38,7 +39,7 @@ public class LeaveRequestResponseDTO {
     }
 
     // All-args constructor
-    public LeaveRequestResponseDTO(UUID id, String employeeName, LeaveType type,
+    public LeaveRequestResponseDTO(UUID id, String employeeName, UUID departmentId, LeaveType type,
                                  LocalDate startDate, LocalDate endDate, String reason,
                                  LeaveStatus status, String rejectionReason,
                                  ApproverDTO approver, String supportingDocumentUrl,
@@ -46,6 +47,7 @@ public class LeaveRequestResponseDTO {
                                  LocalDateTime updatedAt) {
         this.id = id;
         this.employeeName = employeeName;
+        this.departmentId = departmentId;
         this.type = type;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -74,6 +76,14 @@ public class LeaveRequestResponseDTO {
 
     public void setEmployeeName(String employeeName) {
         this.employeeName = employeeName;
+    }
+
+    public UUID getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(UUID departmentId) {
+        this.departmentId = departmentId;
     }
 
     public LeaveType getType() {
@@ -172,6 +182,7 @@ public class LeaveRequestResponseDTO {
     public static class LeaveRequestResponseDTOBuilder {
         private UUID id;
         private String employeeName;
+        private UUID departmentId;
         private LeaveType type;
         private LocalDate startDate;
         private LocalDate endDate;
@@ -194,6 +205,11 @@ public class LeaveRequestResponseDTO {
 
         public LeaveRequestResponseDTOBuilder employeeName(String employeeName) {
             this.employeeName = employeeName;
+            return this;
+        }
+
+        public LeaveRequestResponseDTOBuilder departmentId(UUID departmentId) {
+            this.departmentId = departmentId;
             return this;
         }
 
@@ -253,7 +269,7 @@ public class LeaveRequestResponseDTO {
         }
 
         public LeaveRequestResponseDTO build() {
-            return new LeaveRequestResponseDTO(id, employeeName, type, startDate,
+            return new LeaveRequestResponseDTO(id, employeeName, departmentId, type, startDate,
                                             endDate, reason, status, rejectionReason,
                                             approver, supportingDocumentUrl,
                                             supportingDocumentName, createdAt, updatedAt);
@@ -397,6 +413,8 @@ public class LeaveRequestResponseDTO {
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (employeeName != null ? !employeeName.equals(that.employeeName) : that.employeeName != null)
             return false;
+        if (departmentId != null ? !departmentId.equals(that.departmentId) : that.departmentId != null)
+            return false;
         if (type != that.type) return false;
         if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) return false;
         if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) return false;
@@ -417,6 +435,7 @@ public class LeaveRequestResponseDTO {
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (employeeName != null ? employeeName.hashCode() : 0);
+        result = 31 * result + (departmentId != null ? departmentId.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
@@ -437,6 +456,7 @@ public class LeaveRequestResponseDTO {
         return "LeaveRequestResponseDTO{" +
                 "id=" + id +
                 ", employeeName='" + employeeName + '\'' +
+                ", departmentId=" + departmentId +
                 ", type=" + type +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
