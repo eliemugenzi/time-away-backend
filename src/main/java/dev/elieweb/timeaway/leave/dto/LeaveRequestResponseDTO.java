@@ -21,6 +21,12 @@ public class LeaveRequestResponseDTO {
     
     @Schema(description = "Details of the user who approved/rejected the request")
     private ApproverDTO approver;
+
+    @Schema(description = "URL to access the supporting document")
+    private String supportingDocumentUrl;
+
+    @Schema(description = "Original name of the supporting document")
+    private String supportingDocumentName;
     
     @Schema(hidden = true)
     private LocalDateTime createdAt;
@@ -35,7 +41,8 @@ public class LeaveRequestResponseDTO {
     public LeaveRequestResponseDTO(UUID id, String employeeName, LeaveType type,
                                  LocalDate startDate, LocalDate endDate, String reason,
                                  LeaveStatus status, String rejectionReason,
-                                 ApproverDTO approver, LocalDateTime createdAt,
+                                 ApproverDTO approver, String supportingDocumentUrl,
+                                 String supportingDocumentName, LocalDateTime createdAt,
                                  LocalDateTime updatedAt) {
         this.id = id;
         this.employeeName = employeeName;
@@ -46,6 +53,8 @@ public class LeaveRequestResponseDTO {
         this.status = status;
         this.rejectionReason = rejectionReason;
         this.approver = approver;
+        this.supportingDocumentUrl = supportingDocumentUrl;
+        this.supportingDocumentName = supportingDocumentName;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -123,6 +132,22 @@ public class LeaveRequestResponseDTO {
         this.approver = approver;
     }
 
+    public String getSupportingDocumentUrl() {
+        return supportingDocumentUrl;
+    }
+
+    public void setSupportingDocumentUrl(String supportingDocumentUrl) {
+        this.supportingDocumentUrl = supportingDocumentUrl;
+    }
+
+    public String getSupportingDocumentName() {
+        return supportingDocumentName;
+    }
+
+    public void setSupportingDocumentName(String supportingDocumentName) {
+        this.supportingDocumentName = supportingDocumentName;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -154,6 +179,8 @@ public class LeaveRequestResponseDTO {
         private LeaveStatus status;
         private String rejectionReason;
         private ApproverDTO approver;
+        private String supportingDocumentUrl;
+        private String supportingDocumentName;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -205,6 +232,16 @@ public class LeaveRequestResponseDTO {
             return this;
         }
 
+        public LeaveRequestResponseDTOBuilder supportingDocumentUrl(String supportingDocumentUrl) {
+            this.supportingDocumentUrl = supportingDocumentUrl;
+            return this;
+        }
+
+        public LeaveRequestResponseDTOBuilder supportingDocumentName(String supportingDocumentName) {
+            this.supportingDocumentName = supportingDocumentName;
+            return this;
+        }
+
         public LeaveRequestResponseDTOBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -218,7 +255,8 @@ public class LeaveRequestResponseDTO {
         public LeaveRequestResponseDTO build() {
             return new LeaveRequestResponseDTO(id, employeeName, type, startDate,
                                             endDate, reason, status, rejectionReason,
-                                            approver, createdAt, updatedAt);
+                                            approver, supportingDocumentUrl,
+                                            supportingDocumentName, createdAt, updatedAt);
         }
     }
 
@@ -367,6 +405,10 @@ public class LeaveRequestResponseDTO {
         if (rejectionReason != null ? !rejectionReason.equals(that.rejectionReason) : that.rejectionReason != null)
             return false;
         if (approver != null ? !approver.equals(that.approver) : that.approver != null) return false;
+        if (supportingDocumentUrl != null ? !supportingDocumentUrl.equals(that.supportingDocumentUrl) : that.supportingDocumentUrl != null)
+            return false;
+        if (supportingDocumentName != null ? !supportingDocumentName.equals(that.supportingDocumentName) : that.supportingDocumentName != null)
+            return false;
         if (createdAt != null ? !createdAt.equals(that.createdAt) : that.createdAt != null) return false;
         return updatedAt != null ? updatedAt.equals(that.updatedAt) : that.updatedAt == null;
     }
@@ -382,6 +424,8 @@ public class LeaveRequestResponseDTO {
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (rejectionReason != null ? rejectionReason.hashCode() : 0);
         result = 31 * result + (approver != null ? approver.hashCode() : 0);
+        result = 31 * result + (supportingDocumentUrl != null ? supportingDocumentUrl.hashCode() : 0);
+        result = 31 * result + (supportingDocumentName != null ? supportingDocumentName.hashCode() : 0);
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
         result = 31 * result + (updatedAt != null ? updatedAt.hashCode() : 0);
         return result;
@@ -400,6 +444,8 @@ public class LeaveRequestResponseDTO {
                 ", status=" + status +
                 ", rejectionReason='" + rejectionReason + '\'' +
                 ", approver=" + approver +
+                ", supportingDocumentUrl='" + supportingDocumentUrl + '\'' +
+                ", supportingDocumentName='" + supportingDocumentName + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

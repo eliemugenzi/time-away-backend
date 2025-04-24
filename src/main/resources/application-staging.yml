@@ -74,9 +74,21 @@ jwt:
 app:
   frontend:
     url: ${APP_FRONTEND_URL:https://staging.timeaway.com}
+  api:
+    url: ${APP_API_URL:https://staging-api.timeaway.com}
   jwt:
     refresh-token:
       expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 24 hours default
+  file-storage:
+    location: ${FILE_STORAGE_LOCATION:/var/timeaway/staging/uploads}
+    max-file-size: 10MB
+    allowed-content-types:
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - image/jpeg
+      - image/jpg
+      - image/png
 
 azure:
   activedirectory:

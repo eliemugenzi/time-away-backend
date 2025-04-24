@@ -32,7 +32,7 @@ public class EmailService {
             Context context = new Context();
             Map<String, Object> variables = new HashMap<>();
             variables.put("employeeName", employee.getFirstName() + " " + employee.getLastName());
-            variables.put("leaveType", leaveRequest.getLeaveType());
+            variables.put("leaveType", leaveRequest.getType());
             variables.put("startDate", leaveRequest.getStartDate().format(DATE_FORMATTER));
             variables.put("endDate", leaveRequest.getEndDate().format(DATE_FORMATTER));
             variables.put("reason", leaveRequest.getReason());
@@ -54,7 +54,7 @@ public class EmailService {
             Map<String, Object> variables = new HashMap<>();
             variables.put("employeeName", employee.getFirstName());
             variables.put("status", leaveRequest.getStatus());
-            variables.put("leaveType", leaveRequest.getLeaveType());
+            variables.put("leaveType", leaveRequest.getType());
             variables.put("startDate", leaveRequest.getStartDate().format(DATE_FORMATTER));
             variables.put("endDate", leaveRequest.getEndDate().format(DATE_FORMATTER));
             if (leaveRequest.getRejectionReason() != null) {

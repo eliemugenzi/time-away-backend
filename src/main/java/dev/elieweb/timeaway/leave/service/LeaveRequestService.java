@@ -4,6 +4,7 @@ import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.auth.enums.UserRole;
 import dev.elieweb.timeaway.auth.service.CurrentUserService;
 import dev.elieweb.timeaway.common.exception.BadRequestException;
+import dev.elieweb.timeaway.common.service.FileStorageService;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
@@ -13,7 +14,9 @@ import dev.elieweb.timeaway.leave.entity.LeaveBalance;
 import dev.elieweb.timeaway.leave.entity.LeaveRequest;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
 import dev.elieweb.timeaway.leave.enums.LeaveType;
+import dev.elieweb.timeaway.leave.enums.LeaveDurationType;
 import dev.elieweb.timeaway.leave.repository.LeaveRequestRepository;
+import dev.elieweb.timeaway.common.config.FileUrlConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +40,8 @@ public class LeaveRequestService {
     private final LeaveRequestRepository leaveRequestRepository;
     private final LeaveBalanceService leaveBalanceService;
     private final CurrentUserService currentUserService;
+    private final FileStorageService fileStorageService;
+    private final FileUrlConfig fileUrlConfig;
 
     @Transactional
     public LeaveRequestResponseDTO createLeaveRequest(LeaveRequestDTO request) {
@@ -49,6 +54,12 @@ public class LeaveRequestService {
         }
         if (request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("End date must be after start date");
+        }
+
+        // Validate duration type
+        if (!request.getStartDate().isEqual(request.getEndDate()) && 
+            request.getDurationType() != LeaveDurationType.FULL_DAY) {
+            throw new BadRequestException("Half-day option is only available when start date equals end date");
         }
         
         // Check if user has any pending leave requests
@@ -70,19 +81,34 @@ public class LeaveRequestService {
 
         // Calculate requested days (excluding weekends)
         long requestedDays = calculateWorkingDays(request.getStartDate(), request.getEndDate());
+        if (request.getDurationType() != LeaveDurationType.FULL_DAY) {
+            requestedDays = requestedDays / 2;
+        }
 
         // Check if user has enough days
         if (balance.getRemainingDays() < requestedDays) {
             throw new BadRequestException("Insufficient leave balance. You have " + balance.getRemainingDays() + " days remaining.");
         }
 
+        // Handle file upload
+        String supportingDocumentUrl = null;
+        String supportingDocumentName = null;
+        if (request.getSupportingDocument() != null && !request.getSupportingDocument().isEmpty()) {
+            supportingDocumentName = request.getSupportingDocument().getOriginalFilename();
+            supportingDocumentUrl = fileStorageService.storeFile(request.getSupportingDocument());
+        }
+
         LeaveRequest leaveRequest = LeaveRequest.builder()
                 .user(currentUser)
+                .department(currentUser.getDepartment())
                 .type(request.getType())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .reason(request.getReason())
                 .status(LeaveStatus.PENDING)
+                .durationType(request.getDurationType())
+                .supportingDocumentUrl(supportingDocumentUrl)
+                .supportingDocumentName(supportingDocumentName)
                 .build();
 
         leaveRequest = leaveRequestRepository.save(leaveRequest);
@@ -213,6 +239,11 @@ public class LeaveRequestService {
             throw new RuntimeException("You don't have permission to delete this leave request");
         }
 
+        // Delete associated file if exists
+        if (leaveRequest.getSupportingDocumentUrl() != null) {
+            fileStorageService.deleteFile(leaveRequest.getSupportingDocumentUrl());
+        }
+
         leaveRequestRepository.delete(leaveRequest);
     }
 
@@ -260,6 +291,9 @@ public class LeaveRequestService {
                     .build();
         }
 
+        String supportingDocumentUrl = leaveRequest.getSupportingDocumentUrl() != null ?
+                fileUrlConfig.getFileUrl(leaveRequest.getSupportingDocumentUrl()) : null;
+
         return LeaveRequestResponseDTO.builder()
                 .id(leaveRequest.getId())
                 .employeeName(leaveRequest.getUser().getFirstName() + " " + leaveRequest.getUser().getLastName())
@@ -270,12 +304,14 @@ public class LeaveRequestService {
                 .status(leaveRequest.getStatus())
                 .rejectionReason(leaveRequest.getRejectionReason())
                 .approver(approverDTO)
+                .supportingDocumentUrl(supportingDocumentUrl)
+                .supportingDocumentName(leaveRequest.getSupportingDocumentName())
                 .createdAt(leaveRequest.getCreatedAt())
                 .updatedAt(leaveRequest.getUpdatedAt())
                 .build();
     }
 
-    public PaginatedLeaveRequestResponse searchLeaveRequests(String employeeName, LeaveStatus status, int pageNo, int pageSize) {
+    public PaginatedLeaveRequestResponse searchLeaveRequests(String employeeName, LeaveStatus status, UUID departmentId, int pageNo, int pageSize) {
         User currentUser = currentUserService.getCurrentUser();
         if (currentUser.getRole() != UserRole.ROLE_ADMIN && 
             currentUser.getRole() != UserRole.ROLE_HR) {
@@ -285,10 +321,14 @@ public class LeaveRequestService {
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").descending());
         Page<LeaveRequest> page;
 
-        if (status != null) {
-            page = leaveRequestRepository.searchByEmployeeNameAndStatus(employeeName, status, pageable);
+        if (employeeName != null && !employeeName.trim().isEmpty()) {
+            if (status != null) {
+                page = leaveRequestRepository.searchByEmployeeNameAndStatusAndDepartment(employeeName, status, departmentId, pageable);
+            } else {
+                page = leaveRequestRepository.searchByEmployeeNameAndDepartment(employeeName, departmentId, pageable);
+            }
         } else {
-            page = leaveRequestRepository.searchByEmployeeName(employeeName, pageable);
+            page = leaveRequestRepository.findByStatusAndDepartment(status, departmentId, pageable);
         }
 
         List<LeaveRequestResponseDTO> content = page.getContent().stream()

@@ -90,4 +90,32 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
 
     @Query("SELECT l FROM LeaveRequest l WHERE l.status = :status AND l.startDate BETWEEN :startDate AND :endDate")
     List<LeaveRequest> findByStatusAndStartDateBetween(LeaveStatus status, LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT l FROM LeaveRequest l WHERE " +
+           "(LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', :employeeName, '%'))) AND " +
+           "(:status IS NULL OR l.status = :status) AND " +
+           "(:departmentId IS NULL OR l.department.id = :departmentId)")
+    Page<LeaveRequest> searchByEmployeeNameAndStatusAndDepartment(
+            String employeeName,
+            LeaveStatus status,
+            UUID departmentId,
+            Pageable pageable);
+
+    @Query("SELECT l FROM LeaveRequest l WHERE " +
+           "(LOWER(l.user.firstName) LIKE LOWER(CONCAT('%', :employeeName, '%')) OR " +
+           "LOWER(l.user.lastName) LIKE LOWER(CONCAT('%', :employeeName, '%'))) AND " +
+           "(:departmentId IS NULL OR l.department.id = :departmentId)")
+    Page<LeaveRequest> searchByEmployeeNameAndDepartment(
+            String employeeName,
+            UUID departmentId,
+            Pageable pageable);
+
+    @Query("SELECT l FROM LeaveRequest l WHERE " +
+           "(:status IS NULL OR l.status = :status) AND " +
+           "(:departmentId IS NULL OR l.department.id = :departmentId)")
+    Page<LeaveRequest> findByStatusAndDepartment(
+            LeaveStatus status,
+            UUID departmentId,
+            Pageable pageable);
 } 

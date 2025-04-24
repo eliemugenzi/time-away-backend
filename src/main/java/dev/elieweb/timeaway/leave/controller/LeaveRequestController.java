@@ -4,19 +4,24 @@ import dev.elieweb.timeaway.common.dto.ApiResponse;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
-import dev.elieweb.timeaway.leave.dto.MonthlyLeaveStatisticsDTO;
 import dev.elieweb.timeaway.leave.dto.PaginatedLeaveRequestResponse;
+import dev.elieweb.timeaway.leave.dto.MonthlyLeaveStatisticsDTO;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
+import dev.elieweb.timeaway.leave.enums.LeaveType;
+import dev.elieweb.timeaway.leave.enums.LeaveDurationType;
 import dev.elieweb.timeaway.leave.service.LeaveRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,9 +32,17 @@ import java.util.UUID;
 public class LeaveRequestController {
     private final LeaveRequestService leaveRequestService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create a new leave request")
-    public ResponseEntity<ApiResponse<LeaveRequestResponseDTO>> createLeaveRequest(@Valid @RequestBody LeaveRequestDTO request) {
+    public ResponseEntity<ApiResponse<LeaveRequestResponseDTO>> createLeaveRequest(
+            @RequestParam LeaveType type,
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @RequestParam String reason,
+            @RequestParam(defaultValue = "FULL_DAY") LeaveDurationType durationType,
+            @RequestParam(required = false) MultipartFile supportingDocument) {
+        
+        LeaveRequestDTO request = new LeaveRequestDTO(type, startDate, endDate, reason, durationType, supportingDocument);
         LeaveRequestResponseDTO response = leaveRequestService.createLeaveRequest(request);
         return ResponseEntity.ok(ApiResponse.success("Leave request created successfully", response));
     }
@@ -73,17 +86,14 @@ public class LeaveRequestController {
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Search leave requests by employee name with optional status filter and pagination")
-    public ResponseEntity<ApiResponse<PaginatedLeaveRequestResponse>> searchLeaveRequests(
-            @Parameter(description = "Employee name to search for (can be partial name)", required = true)
-            @RequestParam String employeeName,
+    @Operation(summary = "Search leave requests by employee name and status")
+    public ResponseEntity<PaginatedLeaveRequestResponse> searchLeaveRequests(
+            @RequestParam(required = false) String employeeName,
             @RequestParam(required = false) LeaveStatus status,
-            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(required = false) UUID departmentId,
             @RequestParam(defaultValue = "0") int pageNo,
-            @Parameter(description = "Number of items per page", example = "10")
             @RequestParam(defaultValue = "10") int pageSize) {
-        PaginatedLeaveRequestResponse response = leaveRequestService.searchLeaveRequests(employeeName, status, pageNo, pageSize);
-        return ResponseEntity.ok(ApiResponse.success("Leave requests search completed successfully", response));
+        return ResponseEntity.ok(leaveRequestService.searchLeaveRequests(employeeName, status, departmentId, pageNo, pageSize));
     }
 
     @PutMapping("/{id}")

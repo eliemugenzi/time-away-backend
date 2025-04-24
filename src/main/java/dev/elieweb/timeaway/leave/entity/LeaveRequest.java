@@ -2,20 +2,35 @@ package dev.elieweb.timeaway.leave.entity;
 
 import dev.elieweb.timeaway.auth.entity.User;
 import dev.elieweb.timeaway.common.entity.BaseEntity;
+import dev.elieweb.timeaway.department.entity.Department;
 import dev.elieweb.timeaway.leave.enums.LeaveStatus;
 import dev.elieweb.timeaway.leave.enums.LeaveType;
+import dev.elieweb.timeaway.leave.enums.LeaveDurationType;
 import jakarta.persistence.*;
-
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.UUID;
 
 @Entity
 @Table(name = "leave_requests")
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 public class LeaveRequest extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -34,104 +49,39 @@ public class LeaveRequest extends BaseEntity {
     @Column(nullable = false)
     private LeaveStatus status;
 
-    @Column
     private String rejectionReason;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approver_id")
     private User approver;
 
-    public LeaveRequest() {}
+    @Column(name = "supporting_document_url")
+    private String supportingDocumentUrl;
 
-    public LeaveRequest(User user, LeaveType type, LocalDate startDate, LocalDate endDate,
-                       String reason, LeaveStatus status, String rejectionReason, User approver) {
-        this.user = user;
-        this.type = type;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.reason = reason;
-        this.status = status;
-        this.rejectionReason = rejectionReason;
-        this.approver = approver;
-    }
+    @Column(name = "supporting_document_name")
+    private String supportingDocumentName;
 
-    public static LeaveRequestBuilder builder() {
-        return new LeaveRequestBuilder();
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public LeaveType getType() {
-        return type;
-    }
-
-    public void setType(LeaveType type) {
-        this.type = type;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
-
-    public LeaveStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(LeaveStatus status) {
-        this.status = status;
-    }
-
-    public String getRejectionReason() {
-        return rejectionReason;
-    }
-
-    public void setRejectionReason(String rejectionReason) {
-        this.rejectionReason = rejectionReason;
-    }
-
-    public User getApprover() {
-        return approver;
-    }
-
-    public void setApprover(User approver) {
-        this.approver = approver;
-    }
-
-    public LeaveType getLeaveType() {
-        return type;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private LeaveDurationType durationType;
 
     public double getDuration() {
-        if (startDate == null || endDate == null) {
-            return 0.0;
+        long days = calculateWorkingDays();
+        return durationType == LeaveDurationType.HALF_DAY ? days / 2.0 : days;
+    }
+
+    private long calculateWorkingDays() {
+        long days = 0;
+        LocalDate currentDate = startDate;
+        
+        while (!currentDate.isAfter(endDate)) {
+            if (currentDate.getDayOfWeek().getValue() < 6) { // Monday = 1, Friday = 5
+                days++;
+            }
+            currentDate = currentDate.plusDays(1);
         }
-        return ChronoUnit.DAYS.between(startDate, endDate.plusDays(1));
+        
+        return days;
     }
 
     @Override
@@ -163,62 +113,5 @@ public class LeaveRequest extends BaseEntity {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), user, type, startDate, endDate);
-    }
-
-    public static class LeaveRequestBuilder {
-        private User user;
-        private LeaveType type;
-        private LocalDate startDate;
-        private LocalDate endDate;
-        private String reason;
-        private LeaveStatus status;
-        private String rejectionReason;
-        private User approver;
-
-        LeaveRequestBuilder() {}
-
-        public LeaveRequestBuilder user(User user) {
-            this.user = user;
-            return this;
-        }
-
-        public LeaveRequestBuilder type(LeaveType type) {
-            this.type = type;
-            return this;
-        }
-
-        public LeaveRequestBuilder startDate(LocalDate startDate) {
-            this.startDate = startDate;
-            return this;
-        }
-
-        public LeaveRequestBuilder endDate(LocalDate endDate) {
-            this.endDate = endDate;
-            return this;
-        }
-
-        public LeaveRequestBuilder reason(String reason) {
-            this.reason = reason;
-            return this;
-        }
-
-        public LeaveRequestBuilder status(LeaveStatus status) {
-            this.status = status;
-            return this;
-        }
-
-        public LeaveRequestBuilder rejectionReason(String rejectionReason) {
-            this.rejectionReason = rejectionReason;
-            return this;
-        }
-
-        public LeaveRequestBuilder approver(User approver) {
-            this.approver = approver;
-            return this;
-        }
-
-        public LeaveRequest build() {
-            return new LeaveRequest(user, type, startDate, endDate, reason, status, rejectionReason, approver);
-        }
     }
 } 

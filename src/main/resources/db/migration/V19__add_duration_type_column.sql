@@ -1,0 +1,2 @@
+ALTER TABLE leave_requests
+ADD COLUMN duration_type VARCHAR(50) NOT NULL DEFAULT 'FULL_DAY'; 

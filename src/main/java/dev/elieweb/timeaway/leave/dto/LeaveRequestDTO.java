@@ -1,13 +1,17 @@
 package dev.elieweb.timeaway.leave.dto;
 
 import dev.elieweb.timeaway.leave.enums.LeaveType;
+import dev.elieweb.timeaway.leave.enums.LeaveDurationType;
+import dev.elieweb.timeaway.leave.validation.ValidLeaveDuration;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.Objects;
+import org.springframework.web.multipart.MultipartFile;
 
 @Schema(description = "DTO for creating a leave request")
+@ValidLeaveDuration(message = "Half-day option is only available when start date equals end date")
 public class LeaveRequestDTO {
     @Schema(description = "Type of leave", example = "ANNUAL")
     @NotNull(message = "Leave type is required")
@@ -25,13 +29,21 @@ public class LeaveRequestDTO {
     @NotBlank(message = "Reason is required")
     private String reason;
 
+    @NotNull(message = "Duration type is required")
+    private LeaveDurationType durationType = LeaveDurationType.FULL_DAY;
+
+    private MultipartFile supportingDocument;
+
     public LeaveRequestDTO() {}
 
-    public LeaveRequestDTO(LeaveType type, LocalDate startDate, LocalDate endDate, String reason) {
+    public LeaveRequestDTO(LeaveType type, LocalDate startDate, LocalDate endDate, String reason, 
+                         LeaveDurationType durationType, MultipartFile supportingDocument) {
         this.type = type;
         this.startDate = startDate;
         this.endDate = endDate;
         this.reason = reason;
+        this.durationType = durationType != null ? durationType : LeaveDurationType.FULL_DAY;
+        this.supportingDocument = supportingDocument;
     }
 
     public static LeaveRequestDTOBuilder builder() {
@@ -70,6 +82,22 @@ public class LeaveRequestDTO {
         this.reason = reason;
     }
 
+    public LeaveDurationType getDurationType() {
+        return durationType;
+    }
+
+    public void setDurationType(LeaveDurationType durationType) {
+        this.durationType = durationType != null ? durationType : LeaveDurationType.FULL_DAY;
+    }
+
+    public MultipartFile getSupportingDocument() {
+        return supportingDocument;
+    }
+
+    public void setSupportingDocument(MultipartFile supportingDocument) {
+        this.supportingDocument = supportingDocument;
+    }
+
     @Override
     public String toString() {
         return "LeaveRequestDTO{" +
@@ -77,6 +105,7 @@ public class LeaveRequestDTO {
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
                 ", reason='" + reason + '\'' +
+                ", durationType=" + durationType +
                 '}';
     }
 
@@ -99,6 +128,8 @@ public class LeaveRequestDTO {
         private LocalDate startDate;
         private LocalDate endDate;
         private String reason;
+        private LeaveDurationType durationType;
+        private MultipartFile supportingDocument;
 
         LeaveRequestDTOBuilder() {}
 
@@ -122,8 +153,18 @@ public class LeaveRequestDTO {
             return this;
         }
 
+        public LeaveRequestDTOBuilder durationType(LeaveDurationType durationType) {
+            this.durationType = durationType;
+            return this;
+        }
+
+        public LeaveRequestDTOBuilder supportingDocument(MultipartFile supportingDocument) {
+            this.supportingDocument = supportingDocument;
+            return this;
+        }
+
         public LeaveRequestDTO build() {
-            return new LeaveRequestDTO(type, startDate, endDate, reason);
+            return new LeaveRequestDTO(type, startDate, endDate, reason, durationType, supportingDocument);
         }
     }
 } 
