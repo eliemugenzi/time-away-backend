@@ -1,25 +1,30 @@
 spring:
+  application:
+    name: timeaway
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
   jpa:
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          time_zone: UTC
     hibernate:
       ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  task:
+    scheduling:
+      pool:
+        size: 5
   flyway:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
     validate-on-migrate: true
     baseline-version: 0
-    clean-on-validation-error: false
-    clean-disabled: true
+    clean-on-validation-error: true
+    clean-disabled: false
   security:
     oauth2:
       client:
@@ -71,8 +76,8 @@ sendgrid:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:3600000} # 1 hour default
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  expiration: ${JWT_EXPIRATION:3600000}
 
 app:
   frontend:
@@ -81,7 +86,7 @@ app:
     url: ${APP_API_URL:https://staging-api.timeaway.com}
   jwt:
     refresh-token:
-      expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 24 hours default
+      expiration: ${JWT_REFRESH_EXPIRATION:86400000}
   file-storage:
     location: ${FILE_STORAGE_LOCATION:/app/uploads}
     max-file-size: 5MB
@@ -106,7 +111,7 @@ azure:
     active-directory-groups: ${AZURE_AD_GROUPS:}
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 springdoc:
   api-docs:
@@ -129,4 +134,13 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
     org.springframework.oauth2: DEBUG
-    org.springframework.security.oauth2: TRACE 
+    org.springframework.security.oauth2: TRACE
+
+# MailJet Configuration
+mailjet:
+  api:
+    key: ${MAILJET_API_KEY}
+    secret: ${MAILJET_API_SECRET}
+  sender:
+    email: ${MAILJET_SENDER_EMAIL}
+    name: TimeAway 

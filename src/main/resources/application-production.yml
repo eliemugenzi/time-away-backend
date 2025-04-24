@@ -132,4 +132,13 @@ logging:
   file:
     name: /var/log/timeaway/application.log
   pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" 
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# MailJet Configuration
+mailjet:
+  api:
+    key: ${MAILJET_API_KEY}
+    secret: ${MAILJET_API_SECRET}
+  sender:
+    email: ${MAILJET_SENDER_EMAIL}
+    name: TimeAway 

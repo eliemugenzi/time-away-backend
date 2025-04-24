@@ -118,4 +118,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
             LeaveStatus status,
             UUID departmentId,
             Pageable pageable);
+
+    List<LeaveRequest> findByStatusAndStartDate(LeaveStatus status, LocalDate startDate);
 } 

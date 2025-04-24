@@ -12,7 +12,10 @@ import dev.elieweb.timeaway.common.exception.TokenRefreshException;
 import dev.elieweb.timeaway.department.repository.DepartmentRepository;
 import dev.elieweb.timeaway.job.repository.JobTitleRepository;
 import dev.elieweb.timeaway.leave.service.LeaveBalanceService;
+import dev.elieweb.timeaway.email.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,6 +29,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
+    
     private static final Set<String> HR_DEPARTMENT_NAMES = Set.of(
             "human resources",
             "hr",
@@ -42,16 +47,23 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
     private final LeaveBalanceService leaveBalanceService;
+    private final EmailService emailService;
 
     @Transactional
     public AuthenticationResponse register(RegisterRequest request) {
+        log.info("Starting user registration process for email: {}", request.getEmail());
+        
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Registration failed: Email already exists - {}", request.getEmail());
             throw new IllegalArgumentException("Email already exists");
         }
 
         // Get the department
         var department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+                .orElseThrow(() -> {
+                    log.error("Registration failed: Department not found - ID: {}", request.getDepartmentId());
+                    return new ResourceNotFoundException("Department not found");
+                });
 
         // Determine the role based on department
         UserRole role = request.getRole();
@@ -59,6 +71,7 @@ public class AuthenticationService {
             String departmentNameLower = department.getName().toLowerCase().trim();
             role = HR_DEPARTMENT_NAMES.contains(departmentNameLower) ? 
                    UserRole.ROLE_HR : UserRole.ROLE_USER;
+            log.debug("Assigned role {} based on department {}", role, department.getName());
         }
 
         User user = User.builder()
@@ -68,19 +81,36 @@ public class AuthenticationService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .department(department)
                 .jobTitle(jobTitleRepository.findById(request.getJobTitleId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Job title not found")))
+                        .orElseThrow(() -> {
+                            log.error("Registration failed: Job title not found - ID: {}", request.getJobTitleId());
+                            return new ResourceNotFoundException("Job title not found");
+                        }))
                 .role(role)
                 .joiningDate(LocalDateTime.now())
                 .build();
 
         User savedUser = userRepository.save(user);
+        log.info("User successfully created: {} {}", savedUser.getFirstName(), savedUser.getLastName());
         
         // Initialize leave balances for the new user
         leaveBalanceService.initializeLeaveBalance(savedUser);
+        log.info("Leave balances initialized for user: {}", savedUser.getEmail());
+
+        // Send welcome email
+        try {
+            log.info("Attempting to send welcome email to: {}", savedUser.getEmail());
+            emailService.sendWelcomeEmail(savedUser);
+            log.info("Welcome email sent successfully to: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", savedUser.getEmail(), e.getMessage(), e);
+            // Log the error but don't fail the registration
+        }
 
         String jwtToken = jwtService.generateToken(savedUser);
         var refreshToken = refreshTokenService.createRefreshToken(savedUser);
+        log.info("Authentication tokens generated for user: {}", savedUser.getEmail());
 
+        log.info("User registration completed successfully for: {}", savedUser.getEmail());
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken.getToken())

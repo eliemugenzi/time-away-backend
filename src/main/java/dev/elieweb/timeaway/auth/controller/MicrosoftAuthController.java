@@ -8,6 +8,7 @@ import dev.elieweb.timeaway.auth.service.RefreshTokenService;
 import dev.elieweb.timeaway.department.entity.Department;
 import dev.elieweb.timeaway.department.repository.DepartmentRepository;
 import dev.elieweb.timeaway.leave.service.LeaveBalanceService;
+import dev.elieweb.timeaway.email.service.EmailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,6 +55,7 @@ public class MicrosoftAuthController {
     private final LeaveBalanceService leaveBalanceService;
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final RestTemplate restTemplate;
+    private final EmailService emailService;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -165,6 +167,15 @@ public class MicrosoftAuthController {
 
                             User savedUser = userRepository.save(newUser);
                             leaveBalanceService.initializeLeaveBalance(savedUser);
+
+                            // Send welcome email for new users
+                            try {
+                                emailService.sendWelcomeEmail(savedUser);
+                            } catch (Exception e) {
+                                log.error("Failed to send welcome email to {}: {}", email, e.getMessage());
+                                // Don't fail the authentication process if email fails
+                            }
+
                             return savedUser;
                         });
 

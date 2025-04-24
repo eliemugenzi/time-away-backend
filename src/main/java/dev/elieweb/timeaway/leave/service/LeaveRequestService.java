@@ -5,6 +5,7 @@ import dev.elieweb.timeaway.auth.enums.UserRole;
 import dev.elieweb.timeaway.auth.service.CurrentUserService;
 import dev.elieweb.timeaway.common.exception.BadRequestException;
 import dev.elieweb.timeaway.common.service.FileStorageService;
+import dev.elieweb.timeaway.email.service.EmailService;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestResponseDTO;
 import dev.elieweb.timeaway.leave.dto.LeaveRequestUpdateDTO;
@@ -42,6 +43,7 @@ public class LeaveRequestService {
     private final CurrentUserService currentUserService;
     private final FileStorageService fileStorageService;
     private final FileUrlConfig fileUrlConfig;
+    private final EmailService emailService;
 
     @Transactional
     public LeaveRequestResponseDTO createLeaveRequest(LeaveRequestDTO request) {
@@ -112,6 +114,10 @@ public class LeaveRequestService {
                 .build();
 
         leaveRequest = leaveRequestRepository.save(leaveRequest);
+        
+        // Send email notification
+        emailService.sendLeaveRequestSubmittedEmail(leaveRequest);
+        
         return mapToResponseDTO(leaveRequest);
     }
 
@@ -225,6 +231,9 @@ public class LeaveRequestService {
         if (request.getStatus() == LeaveStatus.APPROVED) {
             leaveBalanceService.updateLeaveBalance(leaveRequest);
         }
+
+        // Send email notification
+        emailService.sendLeaveRequestStatusUpdateEmail(leaveRequest);
 
         return mapToResponseDTO(leaveRequest);
     }

@@ -49,6 +49,10 @@ spring:
             jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys
             user-info-uri: https://graph.microsoft.com/oidc/userinfo
             user-name-attribute: preferred_username
+  task:
+    scheduling:
+      pool:
+        size: 5
 
 jwt:
   secret: ${JWT_SECRET}
@@ -80,6 +84,10 @@ app:
       - application/vnd.openxmlformats-officedocument.wordprocessingml.document
       - image/jpeg
       - image/png
+  email:
+    provider: mailjet
+    from: ${MAILJET_SENDER_EMAIL:noreply@timeaway.com}
+    from-name: TimeAway
 
 azure:
   activedirectory:
@@ -113,4 +121,13 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.oauth2: DEBUG
     org.springframework.security.oauth2: TRACE
-    dev.elieweb.timeaway: DEBUG 
+    dev.elieweb.timeaway: DEBUG
+
+# MailJet Configuration
+mailjet:
+  api:
+    key: ${MAILJET_API_KEY:dummy-key}
+    secret: ${MAILJET_API_SECRET:dummy-secret}
+  sender:
+    email: ${MAILJET_SENDER_EMAIL:noreply@timeaway.com}
+    name: TimeAway 
