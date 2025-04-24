@@ -2,19 +2,19 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    image: eliemugenzi/timeaway-backend:v4.0.1
     ports:
       - "8083:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-staging}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/timeaway_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-Mysecret__123}
       - AZURE_TENANT_ID=${AZURE_TENANT_ID}
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
       - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
-      - APP_FRONTEND_URL=${APP_FRONTEND_URL}
-      - APP_API_URL=${APP_API_URL:-https://api.timeaway.com}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL:-http://localhost:7001}
+      - APP_API_URL=${APP_API_URL:-http://localhost:8083}
       - SENDGRID_API_KEY=${SENDGRID_API_KEY:-dummy-key}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION}
@@ -23,18 +23,24 @@ services:
       - MAILJET_API_SECRET=${MAILJET_API_SECRET}
       - MAILJET_SENDER_EMAIL=${MAILJET_SENDER_EMAIL}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:15-alpine
     ports:
-      - "${DB_PORT}:5432"
+      - "5433:5432"
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=timeaway_db
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Mysecret__123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data: 

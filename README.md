@@ -123,4 +123,41 @@ spring.mail.password=your-app-specific-password
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Running with Docker
+
+### Prerequisites
+- Docker installed on your machine
+- Docker Compose v2 or later
+
+### Steps to Run the Application
+
+1. Pull the latest Docker image from [DockerHub](https://hub.docker.com/r/eliemugenzi/timeaway-backend)
+
+2. Start the application:
+```bash
+docker compose up -d
+```
+
+3. Verify the application is running:
+```bash
+docker compose ps
+```
+
+### Accessing the Application
+
+- Backend API: http://localhost:8083
+- Database: localhost:5433 (if needed for direct access)
+
+### Stopping the Application
+
+To stop the application:
+```bash
+docker compose down
+```
+
+To stop and remove all data (including database volume):
+```bash
+docker compose down -v
+``` 
