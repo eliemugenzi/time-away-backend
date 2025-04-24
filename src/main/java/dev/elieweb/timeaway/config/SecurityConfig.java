@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/v1/departments/**").permitAll()
                 .requestMatchers("/api/v1/job-titles/**").permitAll()
+                .requestMatchers("/api/v1/files/**").permitAll()
                 .requestMatchers("/api/v1/leave-requests/**").authenticated()
                 .requestMatchers("/api/v1/leave-balances/**").authenticated()
                 .requestMatchers("/api/v1/leave-statistics/**").hasAnyRole("ADMIN", "MANAGER")
